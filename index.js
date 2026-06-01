@@ -144,7 +144,7 @@ app.listen(PORT, () => {
   // Self-ping every 10 minutes to prevent sleeping
   setInterval(() => {
     const https = require('https');
-    https.get('https://emailb-backend.bonto.run/', (res) => {
+    https.get('https://emailb-backend.onrender.com/', (res) => {
       console.log(`Self-ping: ${res.statusCode}`);
     }).on('error', (e) => {
       console.log(`Self-ping failed: ${e.message}`);
