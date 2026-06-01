@@ -65,69 +65,97 @@ app.post('/emails', (req, res) => {
   const emails = [];
 
   imap.once('ready', () => {
-    imap.openBox('INBOX', false, (err, box) => {
+    // Search all folders including Notification, Spam, etc.
+    imap.getBoxes((err, boxes) => {
       if (err) {
         imap.end();
-        return res.status(500).json({ error: 'Could not open inbox: ' + err.message });
+        return res.status(500).json({ error: 'Could not get folders: ' + err.message });
       }
 
-      const total = box.messages.total;
-      if (total === 0) {
-        imap.end();
-        return res.json({ emails: [] });
+      // Flatten all folder names
+      const folderNames = [];
+      function getFolders(obj, prefix) {
+        for (const name in obj) {
+          const fullName = prefix ? prefix + obj[name].delimiter + name : name;
+          folderNames.push(fullName);
+          if (obj[name].children) getFolders(obj[name].children, fullName);
+        }
       }
+      getFolders(boxes, '');
 
-      const start = Math.max(1, total - 49);
-      const fetch = imap.seq.fetch(`${start}:${total}`, {
-        bodies: ['HEADER.FIELDS (FROM SUBJECT DATE)', 'TEXT'],
-        struct: true,
-        markSeen: false,
+      // Always include INBOX plus common folders
+      const foldersToSearch = ['INBOX'];
+      const extras = ['Notification', 'Spam', 'Junk', 'Bulk Mail', 'Bulk', 'Social', 'Promotions', 'Updates', 'Forums'];
+      extras.forEach(f => {
+        const match = folderNames.find(n => n.toLowerCase().includes(f.toLowerCase()));
+        if (match && !foldersToSearch.includes(match)) foldersToSearch.push(match);
       });
 
-      const pending = [];
+      const allEmails = [];
+      let folderIndex = 0;
 
-      fetch.on('message', (msg, seqno) => {
-        const emailData = { id: seqno, from: '', subject: '', date: '', body: '', isRead: false };
+      function searchNextFolder() {
+        if (folderIndex >= foldersToSearch.length) {
+          imap.end();
+          allEmails.sort((a, b) => new Date(b.date) - new Date(a.date));
+          return res.json({ emails: allEmails.slice(0, 50) });
+        }
 
-        msg.on('body', (stream, info) => {
-          const p = new Promise((resolve) => {
-            simpleParser(stream, (err, parsed) => {
-              if (!err) {
-                if (info.which.includes('HEADER')) {
-                  emailData.from = parsed.from?.text || '';
-                  emailData.subject = parsed.subject || '';
-                  emailData.date = parsed.date?.toISOString() || new Date().toISOString();
-                } else {
-                  emailData.body = parsed.text || '';
-                }
-              }
-              resolve();
+        const folder = foldersToSearch[folderIndex++];
+        imap.openBox(folder, false, (err, box) => {
+          if (err || !box || box.messages.total === 0) {
+            return searchNextFolder();
+          }
+
+          const total = box.messages.total;
+          const start = Math.max(1, total - 29);
+          const fetch = imap.seq.fetch(`${start}:${total}`, {
+            bodies: ['HEADER.FIELDS (FROM SUBJECT DATE)', 'TEXT'],
+            struct: true,
+            markSeen: false,
+          });
+
+          const pending = [];
+
+          fetch.on('message', (msg, seqno) => {
+            const emailData = { id: `${folder}_${seqno}`, from: '', subject: '', date: '', body: '', isRead: false };
+
+            msg.on('body', (stream, info) => {
+              const p = new Promise((resolve) => {
+                simpleParser(stream, (err, parsed) => {
+                  if (!err) {
+                    if (info.which.includes('HEADER')) {
+                      emailData.from = parsed.from?.text || '';
+                      emailData.subject = parsed.subject || '';
+                      emailData.date = parsed.date?.toISOString() || new Date().toISOString();
+                    } else {
+                      emailData.body = parsed.text || '';
+                    }
+                  }
+                  resolve();
+                });
+              });
+              pending.push(p);
+            });
+
+            msg.once('attributes', (attrs) => {
+              emailData.isRead = attrs.flags && attrs.flags.includes('\\Seen');
+            });
+
+            msg.once('end', () => {
+              allEmails.push(emailData);
             });
           });
-          pending.push(p);
-        });
 
-        msg.once('attributes', (attrs) => {
-          emailData.isRead = attrs.flags && attrs.flags.includes('\\Seen');
-        });
+          fetch.once('error', () => searchNextFolder());
 
-        msg.once('end', () => {
-          emails.push(emailData);
+          fetch.once('end', () => {
+            Promise.all(pending).then(() => searchNextFolder());
+          });
         });
-      });
+      }
 
-      fetch.once('error', (err) => {
-        imap.end();
-        res.status(500).json({ error: 'Fetch error: ' + err.message });
-      });
-
-      fetch.once('end', () => {
-        Promise.all(pending).then(() => {
-          imap.end();
-          emails.sort((a, b) => new Date(b.date) - new Date(a.date));
-          res.json({ emails: emails.slice(0, 50) });
-        });
-      });
+      searchNextFolder();
     });
   });
 
