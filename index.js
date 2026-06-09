@@ -23,6 +23,10 @@ app.get('/', (req, res) => {
 
 // Fetch emails via IMAP
 app.post('/emails', (req, res) => {
+  // Disable caching so every request fetches fresh emails
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.set('Pragma', 'no-cache');
+
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -65,98 +69,78 @@ app.post('/emails', (req, res) => {
   const emails = [];
 
   imap.once('ready', () => {
-    // Search all folders including Notification, Spam, etc.
-    imap.getBoxes((err, boxes) => {
-      if (err) {
+    // Only search Notification folder — that's where Zoho puts verification emails
+    // Fall back to INBOX if Notification doesn't exist
+    const foldersToTry = ['Notification', 'INBOX'];
+    let folderIndex = 0;
+
+    function tryNextFolder() {
+      if (folderIndex >= foldersToTry.length) {
         imap.end();
-        return res.status(500).json({ error: 'Could not get folders: ' + err.message });
+        return res.json({ emails: [] });
       }
 
-      // Flatten all folder names
-      const folderNames = [];
-      function getFolders(obj, prefix) {
-        for (const name in obj) {
-          const fullName = prefix ? prefix + obj[name].delimiter + name : name;
-          folderNames.push(fullName);
-          if (obj[name].children) getFolders(obj[name].children, fullName);
-        }
-      }
-      getFolders(boxes, '');
-
-      // Always include INBOX plus common folders
-      const foldersToSearch = ['INBOX'];
-      const extras = ['Notification', 'Spam', 'Junk', 'Bulk Mail', 'Bulk', 'Social', 'Promotions', 'Updates', 'Forums'];
-      extras.forEach(f => {
-        const match = folderNames.find(n => n.toLowerCase().includes(f.toLowerCase()));
-        if (match && !foldersToSearch.includes(match)) foldersToSearch.push(match);
-      });
-
-      const allEmails = [];
-      let folderIndex = 0;
-
-      function searchNextFolder() {
-        if (folderIndex >= foldersToSearch.length) {
-          imap.end();
-          allEmails.sort((a, b) => new Date(b.date) - new Date(a.date));
-          return res.json({ emails: allEmails.slice(0, 50) });
+      const folder = foldersToTry[folderIndex++];
+      imap.openBox(folder, false, (err, box) => {
+        if (err || !box || box.messages.total === 0) {
+          return tryNextFolder();
         }
 
-        const folder = foldersToSearch[folderIndex++];
-        imap.openBox(folder, false, (err, box) => {
-          if (err || !box || box.messages.total === 0) {
-            return searchNextFolder();
-          }
+        const total = box.messages.total;
+        // Only fetch last 2 emails — newest ones only
+        const start = Math.max(1, total - 1);
+        const fetch = imap.seq.fetch(`${start}:${total}`, {
+          bodies: ['HEADER.FIELDS (FROM SUBJECT DATE)', 'TEXT'],
+          struct: true,
+          markSeen: false,
+        });
 
-          const total = box.messages.total;
-          const start = Math.max(1, total - 29);
-          const fetch = imap.seq.fetch(`${start}:${total}`, {
-            bodies: ['HEADER.FIELDS (FROM SUBJECT DATE)', 'TEXT'],
-            struct: true,
-            markSeen: false,
-          });
+        const allEmails = [];
+        const pending = [];
 
-          const pending = [];
+        fetch.on('message', (msg, seqno) => {
+          const emailData = { id: seqno, from: '', subject: '', date: '', body: '', isRead: false };
 
-          fetch.on('message', (msg, seqno) => {
-            const emailData = { id: `${folder}_${seqno}`, from: '', subject: '', date: '', body: '', isRead: false };
-
-            msg.on('body', (stream, info) => {
-              const p = new Promise((resolve) => {
-                simpleParser(stream, (err, parsed) => {
-                  if (!err) {
-                    if (info.which.includes('HEADER')) {
-                      emailData.from = parsed.from?.text || '';
-                      emailData.subject = parsed.subject || '';
-                      emailData.date = parsed.date?.toISOString() || new Date().toISOString();
-                    } else {
-                      emailData.body = parsed.text || '';
-                    }
+          msg.on('body', (stream, info) => {
+            const p = new Promise((resolve) => {
+              simpleParser(stream, (err, parsed) => {
+                if (!err) {
+                  if (info.which.includes('HEADER')) {
+                    emailData.from = parsed.from?.text || '';
+                    emailData.subject = parsed.subject || '';
+                    emailData.date = parsed.date?.toISOString() || new Date().toISOString();
+                  } else {
+                    emailData.body = parsed.text || '';
                   }
-                  resolve();
-                });
+                }
+                resolve();
               });
-              pending.push(p);
             });
-
-            msg.once('attributes', (attrs) => {
-              emailData.isRead = attrs.flags && attrs.flags.includes('\\Seen');
-            });
-
-            msg.once('end', () => {
-              allEmails.push(emailData);
-            });
+            pending.push(p);
           });
 
-          fetch.once('error', () => searchNextFolder());
+          msg.once('attributes', (attrs) => {
+            emailData.isRead = attrs.flags && attrs.flags.includes('\\Seen');
+          });
 
-          fetch.once('end', () => {
-            Promise.all(pending).then(() => searchNextFolder());
+          msg.once('end', () => {
+            allEmails.push(emailData);
           });
         });
-      }
 
-      searchNextFolder();
-    });
+        fetch.once('error', () => tryNextFolder());
+
+        fetch.once('end', () => {
+          Promise.all(pending).then(() => {
+            imap.end();
+            allEmails.sort((a, b) => new Date(b.date) - new Date(a.date));
+            res.json({ emails: allEmails });
+          });
+        });
+      });
+    }
+
+    tryNextFolder();
   });
 
   imap.once('error', (err) => {
