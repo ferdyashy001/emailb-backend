@@ -23,17 +23,14 @@ app.get('/', (req, res) => {
 
 // Fetch emails via IMAP
 app.post('/emails', (req, res) => {
-  // Disable caching so every request fetches fresh emails
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.set('Pragma', 'no-cache');
 
   const { email, password } = req.body;
-
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  // Detect provider from email address
   let imapConfig = {
     user: email,
     password: password,
@@ -59,46 +56,84 @@ app.post('/emails', (req, res) => {
     imapConfig.host = email.includes('.eu') ? 'imap.zoho.eu' : 'imap.zoho.com';
     imapConfig.port = 993;
   } else {
-    // Generic fallback — tries imap.yourdomain.com
     const domain = email.split('@')[1];
     imapConfig.host = 'imap.' + domain;
     imapConfig.port = 993;
   }
 
   const imap = new Imap(imapConfig);
-  const emails = [];
+  let responded = false;
+
+  function safeRespond(data) {
+    if (!responded) {
+      responded = true;
+      res.json(data);
+    }
+  }
 
   imap.once('ready', () => {
-    // Only search Notification folder — that's where Zoho puts verification emails
-    // Fall back to INBOX if Notification doesn't exist
-    const foldersToTry = ['Notification', 'INBOX'];
-    let folderIndex = 0;
-
-    function tryNextFolder() {
-      if (folderIndex >= foldersToTry.length) {
+    // First get all folder names so we can find the right one
+    imap.getBoxes((err, boxes) => {
+      if (err) {
         imap.end();
-        return res.json({ emails: [] });
+        return safeRespond({ error: 'Could not list folders: ' + err.message });
       }
 
-      const folder = foldersToTry[folderIndex++];
-      imap.openBox(folder, false, (err, box) => {
-        if (err || !box || box.messages.total === 0) {
-          return tryNextFolder();
+      // Flatten all folders
+      const allFolders = [];
+      function flatten(obj, prefix) {
+        for (const name in obj) {
+          const delim = obj[name].delimiter || '/';
+          const full = prefix ? prefix + delim + name : name;
+          allFolders.push(full);
+          if (obj[name].children) flatten(obj[name].children, full);
+        }
+      }
+      flatten(boxes, '');
+
+      // Find Notification folder (works in any language)
+      // Priority: Notification > INBOX
+      let targetFolder = 'INBOX';
+      const notifMatch = allFolders.find(f =>
+        f.toLowerCase().includes('notification') ||
+        f.toLowerCase().includes('powiadomien') // Polish
+      );
+      if (notifMatch) targetFolder = notifMatch;
+
+      imap.openBox(targetFolder, false, (err, box) => {
+        if (err) {
+          // Try INBOX as fallback
+          imap.openBox('INBOX', false, (err2, box2) => {
+            if (err2 || !box2) {
+              imap.end();
+              return safeRespond({ error: 'Could not open inbox: ' + (err2 ? err2.message : 'unknown') });
+            }
+            fetchFromBox(box2);
+          });
+          return;
+        }
+        fetchFromBox(box);
+      });
+
+      function fetchFromBox(box) {
+        if (!box || box.messages.total === 0) {
+          imap.end();
+          return safeRespond({ emails: [] });
         }
 
         const total = box.messages.total;
-        // Only fetch last 2 emails — newest ones only
+        // Fetch last 2 emails only
         const start = Math.max(1, total - 1);
-        const fetch = imap.seq.fetch(`${start}:${total}`, {
+        const fetcher = imap.seq.fetch(`${start}:${total}`, {
           bodies: ['HEADER.FIELDS (FROM SUBJECT DATE)', 'TEXT'],
           struct: true,
           markSeen: false,
         });
 
-        const allEmails = [];
+        const collected = [];
         const pending = [];
 
-        fetch.on('message', (msg, seqno) => {
+        fetcher.on('message', (msg, seqno) => {
           const emailData = { id: seqno, from: '', subject: '', date: '', body: '', isRead: false };
 
           msg.on('body', (stream, info) => {
@@ -123,28 +158,27 @@ app.post('/emails', (req, res) => {
             emailData.isRead = attrs.flags && attrs.flags.includes('\\Seen');
           });
 
-          msg.once('end', () => {
-            allEmails.push(emailData);
-          });
+          msg.once('end', () => collected.push(emailData));
         });
 
-        fetch.once('error', () => tryNextFolder());
+        fetcher.once('error', (err) => {
+          imap.end();
+          safeRespond({ error: 'Fetch error: ' + err.message });
+        });
 
-        fetch.once('end', () => {
+        fetcher.once('end', () => {
           Promise.all(pending).then(() => {
             imap.end();
-            allEmails.sort((a, b) => new Date(b.date) - new Date(a.date));
-            res.json({ emails: allEmails });
+            collected.sort((a, b) => new Date(b.date) - new Date(a.date));
+            safeRespond({ emails: collected });
           });
         });
-      });
-    }
-
-    tryNextFolder();
+      }
+    });
   });
 
   imap.once('error', (err) => {
-    res.status(500).json({ error: 'Connection failed: ' + err.message });
+    safeRespond({ error: 'Connection failed: ' + err.message });
   });
 
   imap.connect();
