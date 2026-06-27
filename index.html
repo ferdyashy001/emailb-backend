@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Email B Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c28;--border:#2a2a3a;
+  --accent:#7c6dfa;--accent2:#fa6d9a;--accent3:#4adeaa;--accent4:#facc15;
+  --text:#e8e8f0;--muted:#6b6b85;--success:#4ade80;--code-bg:#1a1a2e;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(124,109,250,0.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(124,109,250,0.03) 1px,transparent 1px);
+  background-size:40px 40px}
+.shell{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;padding:12px 14px;gap:10px}
+.hdr{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.hdr h1{font-size:16px;font-weight:800;letter-spacing:-0.3px}
+.hdr p{font-size:11px;color:var(--muted);margin-left:auto}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 2fr;gap:10px;flex:1;min-height:0}
+.gen-all-row{display:flex;gap:10px;flex-shrink:0}
+.gen-all-btn{flex:1;padding:10px;border-radius:10px;border:none;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;letter-spacing:0.5px;transition:all 0.18s}
+.gen-all-btn:hover{opacity:0.87;transform:translateY(-1px)}
+.gen-all-btn:active{transform:translateY(0)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;flex-shrink:0}
+.panel-label.u{color:var(--accent2)}
+.panel-label.a{color:var(--accent3)}
+.panel-label.n{color:var(--accent4)}
+.panel-label.pw{color:#f97316}
+.panel-label.dt{color:#38bdf8}
+.panel-label.e{color:var(--accent)}
+.result-box{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;min-height:0;gap:6px;}
+.result-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text);text-align:center;word-break:break-all;line-height:1.4}
+.result-val.empty{color:var(--muted);font-size:11px}
+.copied-flash{font-size:10px;color:var(--success);font-family:'Syne',sans-serif;font-weight:700;opacity:0;transition:opacity 0.2s}
+.copied-flash.show{opacity:1}
+.result-age{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;color:var(--text)}
+.name-box{flex:1;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;min-height:0}
+.name-half{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;gap:3px;cursor:pointer;transition:background 0.15s}
+.name-half:hover{background:rgba(255,255,255,0.03)}
+.name-half:first-child{border-bottom:1px solid var(--border)}
+.name-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.name-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--text);text-align:center}
+.name-val.empty{color:var(--muted);font-size:10px}
+.name-copied{font-size:9px;color:var(--success);font-weight:700;font-family:'Syne',sans-serif;opacity:0;transition:opacity 0.2s}
+.name-copied.show{opacity:1}
+.gen-btn{width:100%;padding:8px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;transition:all 0.15s;flex-shrink:0;}
+.gen-btn.u{background:rgba(250,109,154,0.08);color:var(--accent2);border:1px solid rgba(250,109,154,0.2)}
+.gen-btn.u:hover{background:rgba(250,109,154,0.18)}
+.gen-btn.a{background:rgba(74,222,170,0.06);color:var(--accent3);border:1px solid rgba(74,222,170,0.18)}
+.gen-btn.a:hover{background:rgba(74,222,170,0.16)}
+.gen-btn.n{background:rgba(250,204,21,0.06);color:var(--accent4);border:1px solid rgba(250,204,21,0.18)}
+.gen-btn.n:hover{background:rgba(250,204,21,0.14)}
+.gen-btn.pw{background:rgba(249,115,22,0.06);color:#f97316;border:1px solid rgba(249,115,22,0.18)}
+.gen-btn.pw:hover{background:rgba(249,115,22,0.16)}
+.gen-btn.dt{background:rgba(56,189,248,0.06);color:#38bdf8;border:1px solid rgba(56,189,248,0.18)}
+.gen-btn.dt:hover{background:rgba(56,189,248,0.16)}
+/* Inbox */
+.inbox-inner{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.setup{display:flex;flex-direction:column;gap:9px;flex:1;justify-content:center}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color 0.2s;width:100%}
+input:focus{border-color:var(--accent)}
+input::placeholder{color:var(--muted)}
+.hint{font-size:10px;color:var(--muted);line-height:1.5}
+.setup-btns{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;transition:all 0.18s;flex:1}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#9b8dff);color:#fff}
+.btn-primary:hover{opacity:0.87}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0;gap:6px}
+.status-row{display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success)}
+.status-lbl{font-size:11px;color:var(--muted)}
+.back-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s}
+.back-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.right-tools{display:flex;align-items:center;gap:6px}
+.ref-btn{background:linear-gradient(135deg,var(--accent),#9b8dff);border:none;border-radius:7px;padding:6px 14px;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:5px;transition:all 0.15s}
+.ref-btn:hover{opacity:0.85}
+.ref-btn:disabled{opacity:0.4;cursor:not-allowed}
+.ref-btn.spin svg{animation:rot 0.7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.code-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:0}
+.platform-badge{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--muted)}
+.big-code-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
+.big-code{font-family:'DM Mono',monospace;font-size:36px;font-weight:700;color:var(--text);letter-spacing:6px;text-align:center;background:var(--code-bg);border:1px solid var(--accent);border-radius:12px;padding:16px 20px;width:100%}
+.from-line{font-size:11px;color:var(--muted);text-align:center;font-family:'DM Mono',monospace}
+.big-copy-btn{width:100%;padding:11px;border-radius:10px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all 0.15s;background:linear-gradient(135deg,var(--accent),#9b8dff);color:#fff}
+.big-copy-btn:hover{opacity:0.87}
+.big-copy-btn.ok{background:var(--success);color:#000}
+.countdown-wrap{width:100%;display:flex;flex-direction:column;gap:4px}
+.countdown-bar-bg{width:100%;height:4px;background:var(--border);border-radius:4px;overflow:hidden}
+.countdown-bar{height:100%;background:var(--accent2);border-radius:4px;transition:width 1s linear;width:100%}
+.countdown-lbl{font-size:10px;color:var(--muted);text-align:center;font-family:'DM Mono',monospace}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:8px;color:var(--muted);text-align:center}
+.empty-state .ico{font-size:32px}
+.empty-state p{font-size:11px;line-height:1.6}
+@keyframes fadeOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(0.9)}}
+.fading{animation:fadeOut 0.5s ease forwards}
+.err-box{background:rgba(250,109,154,0.08);border:1px solid rgba(250,109,154,0.3);border-radius:8px;padding:8px 11px;color:var(--accent2);font-size:11px;margin-bottom:7px;font-family:'DM Mono',monospace;display:none;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="hdr">
+    <div class="logo">📬</div>
+    <h1>Email B Toolkit</h1>
+    <p>Username · Age · Name · Password · Inbox</p>
+  </div>
+  <!-- Single Generate All button -->
+  <div class="gen-all-row">
+    <button class="gen-all-btn" onclick="genAll()">⟳ Generate All</button>
+  </div>
+  <div class="grid">
+
+    <!-- ① Username -->
+    <div class="panel">
+      <div class="panel-label u">👤 Username</div>
+      <div class="result-box" onclick="cpUsername()" style="cursor:pointer">
+        <div class="name-lbl" style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:Syne,sans-serif;font-weight:700;text-transform:uppercase">Tap to copy</div>
+        <div class="result-val empty" id="unVal">Click generate</div>
+        <div class="copied-flash" id="unFlash">✓ Copied!</div>
+      </div>
+      <button class="gen-btn u" onclick="genUsernameAndCopy()">⟳ Generate & Copy</button>
+    </div>
+
+    <!-- ② Age -->
+    <div class="panel">
+      <div class="panel-label a">🎲 Age (21–29)</div>
+      <div class="result-box" onclick="cpAge()" style="cursor:pointer">
+        <div class="name-lbl" style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:Syne,sans-serif;font-weight:700;text-transform:uppercase">Tap to copy</div>
+        <div class="result-age" id="ageVal" style="display:none"></div>
+        <div class="result-val empty" id="agePlaceholder">Click generate all</div>
+        <div class="copied-flash" id="ageFlash">✓ Copied!</div>
+      </div>
+    </div>
+
+    <!-- ③ Name -->
+    <div class="panel">
+      <div class="panel-label n">🌍 Name</div>
+      <div class="name-box">
+        <div class="name-half" onclick="cpFirst()">
+          <div class="name-lbl">First Name — tap to copy</div>
+          <div class="name-val empty" id="firstVal">—</div>
+          <div class="name-copied" id="firstFlash">✓ Copied!</div>
+        </div>
+        <div class="name-half" onclick="cpLast()">
+          <div class="name-lbl">Last Name — tap to copy</div>
+          <div class="name-val empty" id="lastVal">—</div>
+          <div class="name-copied" id="lastFlash">✓ Copied!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ Password -->
+    <div class="panel">
+      <div class="panel-label pw">🔐 Password</div>
+      <div class="result-box" onclick="cpPassword()" style="cursor:pointer">
+        <div class="name-lbl" style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:Syne,sans-serif;font-weight:700;text-transform:uppercase">Tap to copy</div>
+        <div class="result-val empty" id="pwVal">Click generate all</div>
+        <div class="copied-flash" id="pwFlash">✓ Copied!</div>
+      </div>
+    </div>
+
+    <!-- ⑤ Date -->
+    <div class="panel">
+      <div class="panel-label dt">📅 Date of Birth</div>
+      <div class="result-box" onclick="cpDate()" style="cursor:pointer">
+        <div class="name-lbl" style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:Syne,sans-serif;font-weight:700;text-transform:uppercase">Tap to copy</div>
+        <div class="result-val empty" id="dtVal">Click generate</div>
+        <div class="copied-flash" id="dtFlash">✓ Copied!</div>
+      </div>
+      <button class="gen-btn dt" onclick="genDateAndCopy()">⟳ Generate & Copy</button>
+    </div>
+
+    <!-- ⑥ Inbox -->
+    <div class="panel">
+      <div class="panel-label e">📥 Email B Inbox</div>
+      <div class="inbox-inner">
+        <div id="setupPanel" class="setup">
+          <div class="field">
+            <label>Email B Address</label>
+            <input type="email" id="emailInput" placeholder="yourname@zohomail.eu"/>
+          </div>
+          <div class="field">
+            <label>App Password</label>
+            <input type="password" id="passInput" placeholder="Your Zoho app password"/>
+          </div>
+          <p class="hint">Only shows verification codes from Instagram, Facebook, X, GMX, Mail.com and Proton. Tap Refresh to check for new codes.</p>
+          <div class="setup-btns">
+            <button class="btn btn-primary" id="connectBtn" onclick="connect()"><span>Connect Inbox</span></button>
+            <button class="btn btn-ghost" onclick="loadDemo()">Demo</button>
+          </div>
+        </div>
+        <div id="inboxArea" style="display:none;flex:1;flex-direction:column;min-height:0">
+          <div class="err-box" id="errBox"></div>
+          <div class="toolbar">
+            <div class="status-row">
+              <div class="dot"></div>
+              <span class="status-lbl">Connected</span>
+              <button class="back-btn" onclick="goBack()">← Back</button>
+              <button class="back-btn" onclick="signOut()" style="border-color:var(--accent2);color:var(--accent2)">Sign Out</button>
+            </div>
+            <div class="right-tools">
+              <button class="ref-btn" id="refBtn" onclick="fetchEmails()">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M23 4v6h-6M1 20v-6h6"/>
+                  <path d="M3.51 9a9 9 0 0114.36-3.36L23 10M1 14l5.13 4.36A9 9 0 0020.49 15"/>
+                </svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div id="codeArea" class="code-area">
+            <div class="empty-state">
+              <div class="ico">🔍</div>
+              <p>Tap <strong>Refresh</strong> to check<br>for new verification codes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+const BACKEND='https://emailb-backend.onrender.com';
+
+/* ══ HELPERS ═════════════════════════════════════════════════════ */
+function cpToClipboard(val){
+  const copy=()=>{const t=document.createElement('textarea');t.value=val;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t)};
+  navigator.clipboard?navigator.clipboard.writeText(val).catch(copy):copy();
+}
+function flash(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),1500);
+}
+
+/* ══ WAT DATE (rolls to next day at 6pm WAT = 17:00 UTC) ════════ */
+function getPasswordDay(){
+  const now=new Date();
+  const watHour=new Date(now.getTime()+60*60*1000).getUTCHours();
+  let d=new Date(now.getTime()+60*60*1000);
+  if(watHour>=18){
+    d=new Date(d.getTime()+24*60*60*1000);
+  }
+  // Return as plain number string — never pad with 0
+  // e.g. day 9 = "9", day 14 = "14", day 20 = "20"
+  return String(d.getUTCDate());
+}
+
+/* ══ PASSWORD GENERATOR ══════════════════════════════════════════ */
+function genPassword(){
+  const day=String(getPasswordDay());
+  // Check if date contains "1" — if so "1" is allowed in random chars
+  const dateHasOne=day.includes('1');
+  // Check if date contains "0"
+  const dateHasZero=day.includes('0');
+
+  // Safe chars — no I, no l, no !, no 0 (confusable with O)
+  // No "1" in random pool unless date contains 1
+  const upper='ABCDEFGHJKMNOPQRSTUVWXYZ'; // no I
+  const lower='abcdefghijkmnopqrstuvwxyz'; // no l
+  const syms='#@$%&*'; // no !
+  // Digits allowed in random part: 2-9 only (no 0, no 1 unless date permits)
+  let digits='23456789';
+  if(dateHasOne) digits+='1';
+  // Never add 0 to random pool even if date has 0 (10,20,30) — 0 stays only in date suffix
+
+  const all=upper+lower+syms+digits;
+
+  const totalLen=Math.floor(Math.random()*4)+8; // 8-11
+  const bodyLen=Math.max(4,totalLen-day.length);
+
+  let body=[];
+  // Must have at least 1 upper, 1 lower, 1 symbol
+  body.push(upper[Math.floor(Math.random()*upper.length)]);
+  body.push(lower[Math.floor(Math.random()*lower.length)]);
+  body.push(syms[Math.floor(Math.random()*syms.length)]);
+  // Fill rest
+  for(let i=body.length;i<bodyLen;i++) body.push(all[Math.floor(Math.random()*all.length)]);
+  // Shuffle body
+  for(let i=body.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[body[i],body[j]]=[body[j],body[i]];}
+  const pw=body.join('')+day;
+  document.getElementById('pwVal').textContent=pw;
+  document.getElementById('pwVal').classList.remove('empty');
+  // No auto-copy — user taps to copy
+}
+function cpPassword(){
+  const val=document.getElementById('pwVal').textContent;
+  if(!val||val==='Click generate all')return;
+  cpToClipboard(val);flash('pwFlash');
+}
+
+/* ══ NAME DATA ═══════════════════════════════════════════════════ */
+const NAMES_BY_COUNTRY={
+  Nigeria:    {first:['Chukwuemeka','Adaeze','Oluwaseun','Ngozi','Emeka','Chioma','Tunde','Amaka','Femi','Yetunde'],last:['Okonkwo','Adeyemi','Eze','Okafor','Balogun','Nwosu','Adeleke','Obiora','Fashola','Chukwu']},
+  USA:        {first:['Tyler','Madison','Brandon','Kayla','Austin','Brittany','Dylan','Ashley','Jordan','Amber'],last:['Johnson','Williams','Brown','Davis','Wilson','Moore','Taylor','Anderson','Thomas','Jackson']},
+  UK:         {first:['Oliver','Emily','Harry','Sophie','Jack','Chloe','George','Jessica','Charlie','Lucy'],last:['Smith','Jones','Williams','Brown','Taylor','Davies','Evans','Wilson','Thomas','Roberts']},
+  France:     {first:['Lucas','Manon','Hugo','Camille','Leo','Chloe','Nathan','Emma','Louis','Ines'],last:['Martin','Bernard','Dubois','Thomas','Robert','Richard','Petit','Durand','Leroy','Moreau']},
+  Germany:    {first:['Leon','Lena','Lukas','Emma','Jonas','Hannah','Felix','Mia','Maximilian','Sofia'],last:['Muller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz','Hoffmann']},
+  Brazil:     {first:['Gabriel','Ana','Lucas','Juliana','Matheus','Fernanda','Pedro','Beatriz','Joao','Camila'],last:['Silva','Santos','Oliveira','Souza','Lima','Pereira','Carvalho','Ferreira','Rodrigues','Almeida']},
+  India:      {first:['Arjun','Priya','Rahul','Anjali','Vikram','Sneha','Rohan','Kavya','Aditya','Pooja'],last:['Sharma','Patel','Singh','Kumar','Gupta','Joshi','Verma','Nair','Reddy','Iyer']},
+  China:      {first:['Wei','Fang','Ming','Li','Jing','Yang','Hao','Xin','Jun','Hui'],last:['Wang','Li','Zhang','Liu','Chen','Yang','Huang','Zhao','Wu','Zhou']},
+  Mexico:     {first:['Alejandro','Valentina','Diego','Sofia','Andres','Isabella','Sebastian','Camila','Mateo','Daniela'],last:['Garcia','Hernandez','Martinez','Lopez','Gonzalez','Perez','Sanchez','Ramirez','Torres','Flores']},
+  Russia:     {first:['Dmitri','Anastasia','Ivan','Natasha','Alexei','Olga','Mikhail','Elena','Sergei','Irina'],last:['Ivanov','Smirnov','Kuznetsov','Popov','Sokolov','Lebedev','Kozlov','Novikov','Morozov','Petrov']},
+  Japan:      {first:['Haruto','Yui','Sota','Hana','Ren','Sakura','Yuto','Aoi','Kaito','Mei'],last:['Sato','Suzuki','Tanaka','Watanabe','Ito','Yamamoto','Nakamura','Kobayashi','Kato','Yoshida']},
+  SouthAfrica:{first:['Sipho','Nomsa','Themba','Zanele','Bongani','Thandi','Lungelo','Nompumelelo','Sibusiso','Ayanda'],last:['Dlamini','Nkosi','Zulu','Mthembu','Khumalo','Ndlovu','Mokoena','Molefe','Sithole','Mahlangu']},
+};
+const COUNTRIES=Object.keys(NAMES_BY_COUNTRY);
+const GIBS=['gdf','jyt','xkz','qpn','bvt','mrf','wld','hqx','nzp','cvb','tyx','pqr','fzx','klt','mnv','bjk','grx','zqt','plv','rwf'];
+let currentFirst='',currentLast='';
+
+function genName(){
+  const country=COUNTRIES[Math.floor(Math.random()*COUNTRIES.length)];
+  const pool=NAMES_BY_COUNTRY[country];
+  currentFirst=pool.first[Math.floor(Math.random()*pool.first.length)];
+  currentLast=pool.last[Math.floor(Math.random()*pool.last.length)];
+  const fv=document.getElementById('firstVal');
+  const lv=document.getElementById('lastVal');
+  fv.textContent=currentFirst;fv.classList.remove('empty');
+  lv.textContent=currentLast;lv.classList.remove('empty');
+  // Also regenerate username based on new name
+  genUsernameFromName(currentFirst,currentLast);
+}
+
+function cpUsername(){
+  const val=document.getElementById('unVal').textContent;
+  if(!val||val==='Click generate')return;
+  cpToClipboard(val);flash('unFlash');
+}
+function cpFirst(){
+  if(!currentFirst)return;
+  cpToClipboard(currentFirst);flash('firstFlash');
+}
+function cpLast(){
+  if(!currentLast)return;
+  cpToClipboard(currentLast);flash('lastFlash');
+}
+
+/* ══ USERNAME (from first+last name) ════════════════════════════ */
+function genUsernameFromName(first,last){
+  const f=first.toLowerCase();
+  const l=last.toLowerCase();
+  const gib=GIBS[Math.floor(Math.random()*GIBS.length)];
+  const num=String(Math.floor(Math.random()*90)+10);
+  const templates=[
+    f+num+gib,
+    f+l.slice(0,3)+num,
+    f.slice(0,4)+l.slice(0,3)+num,
+    f+gib+num,
+    l+num+gib,
+  ];
+  let u=templates[Math.floor(Math.random()*templates.length)];
+  if(u.length>12)u=u.slice(0,12);
+  if(u.length<9)u=u+gib.slice(0,9-u.length);
+  const el=document.getElementById('unVal');
+  el.textContent=u;el.classList.remove('empty');
+  // Don't auto-copy — user taps to copy
+}
+
+function genUsername(){
+  // If we have a name already, use it; otherwise generate random
+  if(currentFirst&&currentLast){
+    genUsernameFromName(currentFirst,currentLast);
+  } else {
+    // fallback random
+    const country=COUNTRIES[Math.floor(Math.random()*COUNTRIES.length)];
+    const pool=NAMES_BY_COUNTRY[country];
+    const f=pool.first[Math.floor(Math.random()*pool.first.length)].toLowerCase();
+    const l=pool.last[Math.floor(Math.random()*pool.last.length)].toLowerCase();
+    genUsernameFromName(f,l);
+  }
+}
+
+/* ══ AGE ═════════════════════════════════════════════════════════ */
+function genAge(){
+  // Range 23-42, truly random (no deduplication so same number can appear twice)
+  const n=Math.floor(Math.random()*20)+23;
+  document.getElementById('ageVal').textContent=n;
+  document.getElementById('ageVal').style.display='block';
+  document.getElementById('agePlaceholder').style.display='none';
+  // No auto-copy — user taps to copy
+}
+function cpAge(){
+  const val=document.getElementById('ageVal').textContent;
+  if(!val||val==='Click generate all')return;
+  cpToClipboard(val);flash('ageFlash');
+}
+
+/* ══ ALLOWED SENDERS ═════════════════════════════════════════════ */
+const ALLOWED_SENDERS=['instagram','facebook','facebookmail','twitter','x.com','twitteremail','gmx','mail.com','proton','protonmail'];
+function isAllowedSender(from,subject){
+  const combined=(from+' '+subject).toLowerCase();
+  return ALLOWED_SENDERS.some(s=>combined.includes(s));
+}
+function getPlatformName(from,subject){
+  const combined=(from+' '+subject).toLowerCase();
+  if(combined.includes('instagram'))return{name:'Instagram',icon:'📸'};
+  if(combined.includes('facebook')||combined.includes('facebookmail'))return{name:'Facebook',icon:'👤'};
+  if(combined.includes('twitter')||combined.includes('x.com'))return{name:'X (Twitter)',icon:'🐦'};
+  if(combined.includes('gmx'))return{name:'GMX',icon:'📧'};
+  if(combined.includes('mail.com'))return{name:'Mail.com',icon:'📧'};
+  if(combined.includes('proton'))return{name:'Proton',icon:'🔒'};
+  return{name:'Unknown',icon:'📩'};
+}
+
+/* ══ MULTILINGUAL CODE EXTRACTION ════════════════════════════════ */
+const TRIGGERS=[
+  // English
+  'verification code','confirmation code','confirm','your code','enter this code',
+  'security code','one-time','otp','passcode','authentication code','sign-in code',
+  'login code','access code','get started on','here\'s your','use this code',
+  'enter the code','your pin','activation code','enter this','below is your',
+  // German
+  'bestätigungscode','verifizierungscode','dein code','ihr code','sicherheitscode',
+  'einmalcode','bestätigung','verifizierung','zugangscode','aktivierungscode',
+  'hier ist dein','lautet','dein bestätigungscode',
+  // French
+  'code de confirmation','code de vérification','votre code','code d\'accès','code de sécurité',
+  // Spanish
+  'código de confirmación','código de verificación','tu código','código de seguridad',
+  // Portuguese
+  'código de confirmação','código de verificação','seu código',
+  // Italian
+  'codice di conferma','codice di verifica','il tuo codice',
+  // Dutch
+  'bevestigingscode','verificatiecode','jouw code',
+];
+
+function extractVerificationCode(text){
+  if(!text)return null;
+
+  // Pattern 1: code at START of line/subject e.g. "751048 is your Instagram code"
+  const subjectStartMatch=text.match(/^(\d{4,8})\s+(?:is your|ist dein|is the|es tu)/im);
+  if(subjectStartMatch)return subjectStartMatch[1];
+
+  // Pattern 2: "your code is 751048" inline
+  const inlineMatch=text.match(/(?:code|pin|otp)[^\d]{0,20}(\d{4,8})(?:\s|$)/i);
+  if(inlineMatch)return inlineMatch[1];
+
+  // Pattern 3: "lautet 11654" (German: "is 11654")
+  const lautetMatch=text.match(/lautet\s+(\d{4,8})/i);
+  if(lautetMatch)return lautetMatch[1];
+
+  // Pattern 4: standalone code on its own line near trigger words
+  const lines=text.split(/\n/);
+  for(let i=0;i<lines.length;i++){
+    const contextLines=lines.slice(Math.max(0,i-4),Math.min(lines.length,i+5)).join(' ').toLowerCase();
+    const hasTrigger=TRIGGERS.some(t=>contextLines.includes(t));
+    if(!hasTrigger)continue;
+    for(let j=Math.max(0,i-2);j<Math.min(lines.length,i+6);j++){
+      const candidate=lines[j].trim();
+      if(/^\d{4,8}$/.test(candidate))return candidate;
+      if(/^\d{3,4}-\d{3,4}$/.test(candidate))return candidate;
+    }
+  }
+  return null;
+}
+
+/* ══ GENERATE ALL ═══════════════════════════════════════════════ */
+function genAll(){
+  genName();     // generates first, last, username
+  genAge();      // generates age
+  genPassword(); // generates password
+  // Date is NOT generated by Generate All — independent only
+}
+
+/* ══ USERNAME INDEPENDENT GENERATE (purely random, ignores name) ═ */
+function genUsernameAndCopy(){
+  // Pick random first+last from pool — independent of generated name
+  const country=COUNTRIES[Math.floor(Math.random()*COUNTRIES.length)];
+  const pool=NAMES_BY_COUNTRY[country];
+  const f=pool.first[Math.floor(Math.random()*pool.first.length)].toLowerCase();
+  const l=pool.last[Math.floor(Math.random()*pool.last.length)].toLowerCase();
+  const gib=GIBS[Math.floor(Math.random()*GIBS.length)];
+  const num=String(Math.floor(Math.random()*90)+10);
+  const templates=[
+    f+num+gib,
+    f+l.slice(0,3)+num,
+    f.slice(0,4)+l.slice(0,3)+num,
+    f+gib+num,
+    l+num+gib,
+  ];
+  let u=templates[Math.floor(Math.random()*templates.length)];
+  if(u.length>12)u=u.slice(0,12);
+  if(u.length<9)u=u+gib.slice(0,9-u.length);
+  const el=document.getElementById('unVal');
+  el.textContent=u;el.classList.remove('empty');
+  // Auto-copy
+  cpToClipboard(u);
+  flash('unFlash');
+}
+
+/* ══ DATE GENERATOR ══════════════════════════════════════════════ */
+let currentDate='';
+function genDateAndCopy(){
+  const year=Math.floor(Math.random()*11)+1993; // 1993-2003
+  const month=Math.floor(Math.random()*12)+1;
+  // Get max days for the month/year
+  const maxDay=new Date(year,month,0).getDate();
+  const day=Math.floor(Math.random()*maxDay)+1;
+  const dd=String(day).padStart(2,'0');
+  const mm=String(month).padStart(2,'0');
+  currentDate=dd+'/'+mm+'/'+year;
+  const el=document.getElementById('dtVal');
+  el.textContent=currentDate;
+  el.classList.remove('empty');
+  // Auto-copy
+  cpToClipboard(currentDate);
+  flash('dtFlash');
+}
+function cpDate(){
+  if(!currentDate)return;
+  cpToClipboard(currentDate);
+  flash('dtFlash');
+}
+
+/* ══ INBOX ═══════════════════════════════════════════════════════ */
+let savedEmail='',savedPass='',countdownInterval=null;
+
+async function fetchWithTimeout(url,options,ms=25000){
+  const ctrl=new AbortController();
+  const id=setTimeout(()=>ctrl.abort(),ms);
+  try{
+    const r=await fetch(url,{...options,signal:ctrl.signal});
+    clearTimeout(id);return r;
+  }catch(e){
+    clearTimeout(id);
+    if(e.name==='AbortError')throw new Error('Timed out — please try again');
+    throw e;
+  }
+}
+
+async function connect(){
+  const email=document.getElementById('emailInput').value.trim();
+  const pass=document.getElementById('passInput').value.trim();
+  if(!email||!pass){showErr('Please enter your email and password.');return;}
+  savedEmail=email;savedPass=pass;
+  // Save to localStorage so it persists on refresh
+  try{localStorage.setItem('emailb_email',email);localStorage.setItem('emailb_pass',pass);}catch(e){}
+  setBusy(true);
+  try{
+    const r=await fetchWithTimeout(BACKEND+'/emails?t='+Date.now(),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Cache-Control':'no-cache','Pragma':'no-cache'},
+      body:JSON.stringify({email,password:pass})
+    });
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    showInbox();
+    processEmails(d.emails||[]);
+  }catch(e){showErr('Connection failed: '+e.message);setBusy(false);}
+}
+
+function loadDemo(){
+  showInbox();
+  processEmails([
+    {id:1,from:'Facebook <security@facebookmail.com>',subject:'Dein Bestätigungscode lautet 11654',
+      body:'Hallo Camila,\n\nWir haben deine Anfrage zur Kontoerstellung erhalten. Hier ist dein Bestätigungscode:\n\n11654\n\nTeile diesen Code mit niemandem.',
+      date:new Date().toISOString(),isRead:false},
+  ]);
+}
+
+async function fetchEmails(){
+  setSpin(true);
+  try{
+    const r=await fetchWithTimeout(BACKEND+'/emails?t='+Date.now(),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Cache-Control':'no-cache','Pragma':'no-cache'},
+      body:JSON.stringify({email:savedEmail,password:savedPass})
+    });
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    hideErr();
+    processEmails(d.emails||[]);
+  }catch(e){showErr('Fetch error: '+e.message);}
+  setSpin(false);
+}
+
+function processEmails(emails){
+  if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null;}
+  const filtered=emails.filter(em=>{
+    if(!isAllowedSender(em.from||'',em.subject||''))return false;
+    return extractVerificationCode((em.body||'')+'\n'+(em.subject||''))!==null;
+  });
+  filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const latest=filtered[0]||null;
+  const area=document.getElementById('codeArea');
+  if(!latest){
+    area.innerHTML=`<div class="empty-state"><div class="ico">🔍</div><p>No new verification codes found<br><span style="font-size:10px;color:var(--muted)">From: Instagram · Facebook · X · GMX · Mail.com · Proton</span></p></div>`;
+    return;
+  }
+  const code=extractVerificationCode((latest.body||'')+'\n'+(latest.subject||''));
+  const platform=getPlatformName(latest.from||'',latest.subject||'');
+  const fromClean=(latest.from||'').replace(/<.*>/,'').trim();
+  area.innerHTML=`
+    <div class="platform-badge"><span>${platform.icon}</span><span>${platform.name}</span></div>
+    <div class="big-code-wrap" id="codeWrap">
+      <div class="big-code">${esc(code)}</div>
+      <div class="from-line">${esc(fromClean)}</div>
+      <button class="big-copy-btn" id="copyBtn" onclick="cpBigCode('${esc(code)}')">⎘ Copy Code</button>
+      <div class="countdown-wrap">
+        <div class="countdown-bar-bg"><div class="countdown-bar" id="cbar"></div></div>
+        <div class="countdown-lbl" id="clbl">Disappears in 10s</div>
+      </div>
+    </div>`;
+  let secs=10;
+  setTimeout(()=>{const b=document.getElementById('cbar');if(b)b.style.width='0%';},50);
+  countdownInterval=setInterval(()=>{
+    secs--;
+    const lbl=document.getElementById('clbl');if(lbl)lbl.textContent=`Disappears in ${secs}s`;
+    if(secs<=0){
+      clearInterval(countdownInterval);
+      const wrap=document.getElementById('codeWrap');
+      if(wrap){wrap.classList.add('fading');setTimeout(()=>{area.innerHTML=`<div class="empty-state"><div class="ico">✅</div><p>Code expired<br><span style="font-size:10px;color:var(--muted)">Tap Refresh to check for new codes</span></p></div>`;},500);}
+    }
+  },1000);
+}
+
+function cpBigCode(code){
+  cpToClipboard(code);
+  const btn=document.getElementById('copyBtn');
+  if(btn){btn.textContent='✓ Copied!';btn.classList.add('ok');setTimeout(()=>{btn.textContent='⎘ Copy Code';btn.classList.remove('ok');},1800);}
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function loadSavedCredentials(){
+  try{
+    const e=localStorage.getItem('emailb_email');
+    const p=localStorage.getItem('emailb_pass');
+    if(e&&p){
+      document.getElementById('emailInput').value=e;
+      document.getElementById('passInput').value=p;
+    }
+  }catch(e){}
+}
+window.addEventListener('DOMContentLoaded',loadSavedCredentials);
+
+function signOut(){
+  try{localStorage.removeItem('emailb_email');localStorage.removeItem('emailb_pass');}catch(e){}
+  goBack();
+}
+
+function showInbox(){
+  document.getElementById('setupPanel').style.display='none';
+  const ia=document.getElementById('inboxArea');
+  ia.style.display='flex';ia.style.flexDirection='column';ia.style.flex='1';ia.style.minHeight='0';
+}
+function goBack(){
+  if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null;}
+  savedEmail='';savedPass='';
+  document.getElementById('setupPanel').style.display='flex';
+  document.getElementById('inboxArea').style.display='none';
+  hideErr();setBusy(false);
+}
+function setBusy(v){const b=document.getElementById('connectBtn');b.disabled=v;b.querySelector('span').textContent=v?'Connecting…':'Connect Inbox'}
+function setSpin(v){const b=document.getElementById('refBtn');b.disabled=v;if(v)b.classList.add('spin');else b.classList.remove('spin');}
+function showErr(m){const e=document.getElementById('errBox');e.textContent='⚠ '+m;e.style.display='block'}
+function hideErr(){document.getElementById('errBox').style.display='none'}
+</script>
+</body>
+</html>
