@@ -24,110 +24,63 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .hdr h1{font-size:16px;font-weight:800;letter-spacing:-0.3px}
 .hdr p{font-size:11px;color:var(--muted);margin-left:auto}
 
-/* Adjusted layouts for less clustering */
-.main-layout{display:flex;flex-direction:column;gap:10px;flex:1;min-height:0}
-.top-pipeline{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
-.pipeline-inputs{display:grid;grid-template-columns:1fr 2fr;gap:10px}
-.file-upload-zone{border:2px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;cursor:pointer;background:var(--bg);transition:border-color 0.2s}
-.file-upload-zone:hover{border-color:var(--accent)}
-.file-upload-zone input{display:none}
-.file-upload-zone p{font-size:11px;color:var(--muted);text-align:center;margin-top:4px}
-.paste-box{width:100%;height:70px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:11px;resize:none;outline:none}
-.paste-box:focus{border-color:var(--accent)}
+.main-layout{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0}
+.left-col, .right-col{display:flex;flex-direction:column;gap:10px;min-height:0}
 
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 2fr;gap:10px;flex:1;min-height:0}
-.gen-all-row{display:flex;gap:10px;flex-shrink:0}
-.gen-all-btn{flex:1;padding:10px;border-radius:10px;border:none;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;letter-spacing:0.5px;transition:all 0.18s}
-.gen-all-btn:hover{opacity:0.87;transform:translateY(-1px)}
-
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;min-height:0;position:relative}
 .panel-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;flex-shrink:0}
 .panel-label.u{color:var(--accent2)}
 .panel-label.a{color:var(--accent3)}
 .panel-label.n{color:var(--accent4)}
-.panel-label.pw{color:#f97316}
-.panel-label.dt{color:#38bdf8}
 .panel-label.e{color:var(--accent)}
 
-.result-box{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;min-height:0;gap:6px;}
-.result-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text);text-align:center;word-break:break-all;line-height:1.4}
-.result-val.empty{color:var(--muted);font-size:11px}
-.copied-flash{font-size:10px;color:var(--success);font-family:'Syne',sans-serif;font-weight:700;opacity:0;transition:opacity 0.2s}
-.copied-flash.show{opacity:1}
-.result-age{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;color:var(--text)}
+/* Pipeline Elements */
+.pipeline-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+.file-upload-zone{border:2px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;cursor:pointer;background:var(--bg);transition:border-color 0.2s}
+.file-upload-zone:hover{border-color:var(--accent)}
+.file-upload-zone input{display:none}
+.file-upload-zone p{font-size:11px;color:var(--muted);text-align:center;margin-top:4px}
+.paste-box{width:100%;height:65px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:11px;resize:none;outline:none}
 
-/* Active Generator Output List CSS */
-.accounts-container{flex:1;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:6px}
-.account-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:4px}
-.card-row{display:flex;justify-content:between;align-items:center;gap:6px}
-.card-email{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.card-full-str{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;background:var(--bg);padding:3px;border-radius:4px}
-.card-actions{display:flex;gap:4px}
-.card-btn{padding:4px 8px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);cursor:pointer}
-.card-btn:hover{border-color:var(--accent)}
-.card-btn.read{background:var(--accent);color:#fff;border:none}
+.pipeline-actions{display:flex;gap:8px;margin-bottom:4px}
+.btn-ingest{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(74,222,170,0.3);background:rgba(74,222,170,0.08);color:var(--accent3);font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer}
+.btn-generate-single{flex:1.5;padding:8px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;cursor:pointer}
+.btn-generate-single:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;border:1px solid var(--border)}
 
-.name-box{flex:1;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;min-height:0}
-.name-half{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;gap:3px;cursor:pointer;transition:background 0.15s}
-.name-half:hover{background:rgba(255,255,255,0.03)}
-.name-half:first-child{border-bottom:1px solid var(--border)}
-.name-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
-.name-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--text);text-align:center}
-.name-val.empty{color:var(--muted);font-size:10px}
-.name-copied{font-size:9px;color:var(--success);font-weight:700;font-family:'Syne',sans-serif;opacity:0;transition:opacity 0.2s}
-.name-copied.show{opacity:1}
-.gen-btn{width:100%;padding:8px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;transition:all 0.15s;flex-shrink:0;}
-.gen-btn.u{background:rgba(250,109,154,0.08);color:var(--accent2);border:1px solid rgba(250,109,154,0.2)}
-.gen-btn.u:hover{background:rgba(250,109,154,0.18)}
-.gen-btn.dt{background:rgba(56,189,248,0.06);color:#38bdf8;border:1px solid rgba(56,189,248,0.18)}
-.gen-btn.dt:hover{background:rgba(56,189,248,0.16)}
+/* Active Card Grid Layout */
+.active-card-display{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center}
+.display-row{display:flex;flex-direction:column;gap:3px}
+.display-label{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:1px}
+.display-value{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);background:var(--surface2);padding:6px 10px;border-radius:6px;border:1px solid var(--border);word-break:break-all;display:flex;justify-content:between;align-items:center;cursor:pointer}
+.display-value:hover{border-color:var(--accent)}
+.display-value.empty{color:var(--muted);font-style:italic;justify-content:center}
+.display-value .cp-ico{font-size:10px;color:var(--muted);margin-left:auto}
+.read-action-container{margin-top:4px}
+.btn-read-otp{width:100%;padding:10px;border:none;border-radius:8px;background:var(--accent3);color:#0a0a0f;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;cursor:pointer}
+.btn-read-otp:disabled{opacity:0.3;cursor:not-allowed}
 
-/* Inbox Box Styles */
-.inbox-inner{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.setup{display:flex;flex-direction:column;gap:9px;flex:1;justify-content:center}
-.field{display:flex;flex-direction:column;gap:4px}
-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color 0.2s;width:100%}
-input:focus{border-color:var(--accent)}
-input::placeholder{color:var(--muted)}
-.hint{font-size:10px;color:var(--muted);line-height:1.5}
-.setup-btns{display:flex;gap:8px}
-.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;transition:all 0.18s;flex:1}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#9b8dff);color:#fff}
-.btn-primary:hover{opacity:0.87}
-.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
-.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
-.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0;gap:6px}
-.status-row{display:flex;align-items:center;gap:6px}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success)}
-.status-lbl{font-size:11px;color:var(--muted)}
-.back-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s}
-.back-btn:hover{border-color:var(--accent2);color:var(--accent2)}
-.right-tools{display:flex;align-items:center;gap:6px}
-.ref-btn{background:linear-gradient(135deg,var(--accent),#9b8dff);border:none;border-radius:7px;padding:6px 14px;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:5px;transition:all 0.15s}
-.ref-btn:hover{opacity:0.85}
-.ref-btn:disabled{opacity:0.4;cursor:not-allowed}
-.ref-btn.spin svg{animation:rot 0.7s linear infinite}
-@keyframes rot{to{transform:rotate(360deg)}}
-.code-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:0}
-.platform-badge{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--muted)}
-.big-code-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
-.big-code{font-family:'DM Mono',monospace;font-size:36px;font-weight:700;color:var(--text);letter-spacing:6px;text-align:center;background:var(--code-bg);border:1px solid var(--accent);border-radius:12px;padding:16px 20px;width:100%}
-.from-line{font-size:11px;color:var(--muted);text-align:center;font-family:'DM Mono',monospace}
-.big-copy-btn{width:100%;padding:11px;border-radius:10px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all 0.15s;background:linear-gradient(135deg,var(--accent),#9b8dff);color:#fff}
-.big-copy-btn:hover{opacity:0.87}
-.big-copy-btn.ok{background:var(--success);color:#000}
-.countdown-wrap{width:100%;display:flex;flex-direction:column;gap:4px}
-.countdown-bar-bg{width:100%;height:4px;background:var(--border);border-radius:4px;overflow:hidden}
-.countdown-bar{height:100%;background:var(--accent2);border-radius:4px;transition:width 1s linear;width:100%}
-.countdown-lbl{font-size:10px;color:var(--muted);text-align:center;font-family:'DM Mono',monospace}
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:8px;color:var(--muted);text-align:center}
-.empty-state .ico{font-size:32px}
-.empty-state p{font-size:11px;line-height:1.6}
-@keyframes fadeOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(0.9)}}
-.fading{animation:fadeOut 0.5s ease forwards}
-.err-box{background:rgba(250,109,154,0.08);border:1px solid rgba(250,109,154,0.3);border-radius:8px;padding:8px 11px;color:var(--accent2);font-size:11px;margin-bottom:7px;font-family:'DM Mono',monospace;display:none;flex-shrink:0}
+/* Legacy Generator Outputs Grid */
+.info-subgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.info-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.info-box:hover{border-color:var(--accent)}
+.info-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;text-align:center}
+.info-val.empty{color:var(--muted);font-size:11px}
+.info-btn{width:100%;padding:8px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;background:var(--surface2);color:var(--text);border:1px solid var(--border);margin-top:6px}
+
+/* ZohoMail / IMAP Section Form Elements */
+.input-group{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.input-group label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.input-group input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;width:100%}
+.input-group input:focus{border-color:var(--accent)}
+.btn-zoho{width:100%;padding:10px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer}
+
+/* Code Area Outputs */
+.code-box-display{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:75px;}
+.otp-display-value{font-family:'DM Mono',monospace;font-size:24px;font-weight:700;color:var(--accent4);letter-spacing:4px}
+.queue-counter{position:absolute;top:14px;right:14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:20px;border:1px solid var(--border)}
+.err-box{background:rgba(250,109,154,0.08);border:1px solid rgba(250,109,154,0.3);border-radius:8px;padding:8px;color:var(--accent2);font-size:11px;font-family:'DM Mono',monospace;margin-top:5px;display:none}
+.copied-toast{font-size:10px;color:var(--success);font-weight:700;text-align:center;height:12px;opacity:0;transition:opacity 0.2s}
+.copied-toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -135,282 +88,345 @@ input::placeholder{color:var(--muted)}
   <div class="hdr">
     <div class="logo">📬</div>
     <h1>Email B Toolkit Pro</h1>
-    <p>Hotmail Automation Pipeline Enabled</p>
+    <p>Dual Hotmail & Zoho Automation Layer Enabled</p>
   </div>
 
   <div class="main-layout">
-    <div class="top-pipeline">
-      <div class="panel-label u" style="margin-bottom:4px;">📥 Mass Data Hotmail Ingestion Pipeline (.txt, .csv, .xlsx)</div>
-      <div class="pipeline-inputs">
-        <div class="file-upload-zone" onclick="document.getElementById('fileInputEl').click()">
-          <span style="font-size: 16px;">📁</span>
-          <p id="fileLabel">Click to Upload File</p>
-          <input type="file" id="fileInputEl" accept=".txt,.csv,.xlsx" onchange="handleFileUpload(event)"/>
-        </div>
-        <textarea class="paste-box" id="directPasteField" placeholder="Paste data directly here line by line:&#10;DowRaouf579147@hotmail.com|erfulw34935|M.C513_SN1...|9e5f94bc..."></textarea>
-      </div>
-      <div class="gen-all-row">
-        <button class="gen-all-btn" onclick="processPipelineData()">⚡ Ingest & Generate Tokens</button>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="panel">
-        <div class="panel-label u">👤 Username</div>
-        <div class="result-box" onclick="cpUsername()" style="cursor:pointer">
-          <div class="name-lbl">Tap to copy</div>
-          <div class="result-val empty" id="unVal">Click generate</div>
-          <div class="copied-flash" id="unFlash">✓ Copied!</div>
-        </div>
-        <button class="gen-btn u" onclick="genUsernameAndCopy()">⟳ Generate & Copy</button>
-      </div>
-
-      <div class="panel">
-        <div class="panel-label a">🎲 Age (23–42)</div>
-        <div class="result-box" onclick="cpAge()" style="cursor:pointer">
-          <div class="name-lbl">Tap to copy</div>
-          <div class="result-age" id="ageVal" style="display:none"></div>
-          <div class="result-val empty" id="agePlaceholder">Click generate all</div>
-          <div class="copied-flash" id="ageFlash">✓ Copied!</div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-label n">🌍 Name</div>
-        <div class="name-box">
-          <div class="name-half" onclick="cpFirst()">
-            <div class="name-lbl">First Name — tap to copy</div>
-            <div class="name-val empty" id="firstVal">—</div>
-            <div class="name-copied" id="firstFlash">✓ Copied!</div>
+    
+    <div class="left-col">
+      <div class="panel" style="flex:1;">
+        <div class="panel-label e">📥 Hotmail Sequential Queue Parser</div>
+        <div class="queue-counter" id="queueStatus">Queue: 0 loaded</div>
+        
+        <div class="pipeline-inputs">
+          <div class="file-upload-zone" onclick="document.getElementById('fileInputEl').click()">
+            <span style="font-size: 14px;">📁</span>
+            <p id="fileLabel">Upload File</p>
+            <input type="file" id="fileInputEl" accept=".txt,.csv,.xlsx" onchange="handleFileUpload(event)"/>
           </div>
-          <div class="name-half" onclick="cpLast()">
-            <div class="name-lbl">Last Name — tap to copy</div>
-            <div class="name-val empty" id="lastVal">—</div>
-            <div class="name-copied" id="lastFlash">✓ Copied!</div>
+          <textarea class="paste-box" id="directPasteField" placeholder="Paste records here (email|pass|token|id)..."></textarea>
+        </div>
+
+        <div class="pipeline-actions">
+          <button class="btn-ingest" onclick="loadDataToQueue()">Load Source Data</button>
+          <button class="btn-generate-single" id="btnGenNext" onclick="generateRandomHotmail()" disabled>⚡ Pick Random Live Account</button>
+        </div>
+        
+        <div class="copied-toast" id="toastNotification">✓ Copied to clipboard!</div>
+
+        <div class="active-card-display">
+          <div class="display-row">
+            <div class="display-label">Active Hotmail Email</div>
+            <div class="display-value empty" id="activeEmailView" onclick="copyValue('activeEmailView')">No Account Selected <span class="cp-ico">⎘</span></div>
+          </div>
+          <div class="display-row">
+            <div class="display-label">Full Verification String</div>
+            <div class="display-value empty" id="activeStringView" onclick="copyValue('activeStringView')">— <span class="cp-ico">⎘</span></div>
+          </div>
+          <div class="read-action-container">
+            <button class="btn-read-otp" id="btnReadHotmail" onclick="readActiveHotmailCode()" disabled>🔑 Read Verification OTP Code</button>
           </div>
         </div>
-      </div>
 
-      <div class="panel">
-        <div class="panel-label pw">🔐 Password</div>
-        <div class="result-box" onclick="cpPassword()" style="cursor:pointer">
-          <div class="name-lbl">Tap to copy</div>
-          <div class="result-val empty" id="pwVal">Click generate all</div>
-          <div class="copied-flash" id="pwFlash">✓ Copied!</div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-label dt">📅 Date of Birth</div>
-        <div class="result-box" onclick="cpDate()" style="cursor:pointer">
-          <div class="name-lbl">Tap to copy</div>
-          <div class="result-val empty" id="dtVal">Click generate</div>
-          <div class="copied-flash" id="dtFlash">✓ Copied!</div>
-        </div>
-        <button class="gen-btn dt" onclick="genDateAndCopy()">⟳ Generate & Copy</button>
-      </div>
-
-      <div class="panel">
-        <div class="panel-label e">📋 Ingested Hotmails Array</div>
-        <div class="accounts-container" id="accountsArrayOutput">
-          <div class="empty-state">
-            <div class="ico">📥</div>
-            <p>Upload a file or paste text strings above</p>
-          </div>
+        <div class="code-box-display" style="margin-top:8px;">
+          <div class="display-label" style="margin-bottom:2px;">Extracted Hotmail OTP Code</div>
+          <div id="hotmailOtpOutput" class="otp-display-value" style="font-size: 20px; letter-spacing: 2px; color: var(--success);">READY</div>
         </div>
       </div>
     </div>
 
-    <div class="panel" id="inboxViewModule" style="display:none; max-height:180px; margin-top:5px;">
-      <div class="panel-label e" id="inboxTitle">📥 Active Hotmail Inbox Monitor</div>
-      <div class="inbox-inner">
-        <div id="inboxArea" style="display:flex;flex-direction:column;min-height:0">
-          <div class="err-box" id="errBox"></div>
-          <div class="toolbar">
-            <div class="status-row">
-              <div class="dot"></div>
-              <span class="status-lbl" id="activeEmailLabel">Connected</span>
-              <button class="back-btn" onclick="closeInboxModule()">✕ Close</button>
-            </div>
+    <div class="right-col">
+      <div class="panel">
+        <div class="panel-label u">🛡️ Traditional ZohoMail / Domain IMAP Monitor</div>
+        <div class="input-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="input-group">
+            <label>Email Address</label>
+            <input type="text" id="zohoEmail" placeholder="example@zoho.com"/>
           </div>
-          <div id="codeArea" class="code-area">
-            <div class="empty-state">
-              <div class="ico">🔍</div>
-              <p>Fetching verification code from Hotmail servers...</p>
-            </div>
+          <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="zohoPassword" placeholder="App Password"/>
           </div>
         </div>
+        <button class="btn-zoho" id="btnConnectZoho" onclick="fetchZohoEmails()">Connect & Check Last Message</button>
+        <div class="err-box" id="zohoErr"></div>
+        
+        <div class="code-box-display" style="margin-top:10px;">
+          <div class="display-label" style="margin-bottom:2px;">Extracted ZohoMail Code</div>
+          <div id="zohoOtpOutput" class="otp-display-value">—— ——</div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1;">
+        <div class="panel-label n">⚙️ Legacy Identity Field Vectors</div>
+        <div class="info-subgrid" style="flex:1;">
+          <div class="info-box" onclick="copyDirectText('unVal')"><div class="display-label">Username</div><div class="info-val empty" id="unVal">—</div></div>
+          <div class="info-box" onclick="copyDirectText('ageVal')"><div class="display-label">Age</div><div class="info-val empty" id="ageVal">—</div></div>
+          <div class="info-box" onclick="copyDirectText('firstVal')"><div class="display-label">First Name</div><div class="info-val empty" id="firstVal">—</div></div>
+          <div class="info-box" onclick="copyDirectText('lastVal')"><div class="display-label">Last Name</div><div class="info-val empty" id="lastVal">—</div></div>
+          <div class="info-box" onclick="copyDirectText('pwVal')"><div class="display-label">Password</div><div class="info-val empty" id="pwVal">—</div></div>
+          <div class="info-box" onclick="copyDirectText('dtVal')"><div class="display-label">Date of Birth</div><div class="info-val empty" id="dtVal">—</div></div>
+        </div>
+        <button class="info-btn" onclick="triggerLegacyGenerators()">⟳ Fast Track Info Generator Set</button>
       </div>
     </div>
 
-  </div>
-  <div class="gen-all-row" style="margin-top:5px;">
-    <button class="gen-all-btn" style="background:var(--surface2); border:1px solid var(--border);" onclick="genAll()">⟳ Fast Track Info Generator</button>
   </div>
 </div>
 
 <script>
-const BACKEND='https://emailb-backend.onrender.com';
+const BACKEND = 'https://emailb-backend.onrender.com';
+let globalMasterQueue = [];
+let currentAccountIndex = -1;
 let uploadedFileObject = null;
 
-/* ══ CORE INTERACTION PIPELINE GENERATION SCRIPT ═══════════════ */
 function handleFileUpload(event) {
   const file = event.target.files[0];
   if(file) {
     uploadedFileObject = file;
-    document.getElementById('fileLabel').textContent = file.name + ` (${(file.size/1024).toFixed(1)} KB)`;
+    document.getElementById('fileLabel').textContent = file.name;
   }
 }
 
-async function processPipelineData() {
+// Read fields and populate the working local master queue array
+async function loadDataToQueue() {
   const pasteData = document.getElementById('directPasteField').value.trim();
-  const outputContainer = document.getElementById('accountsArrayOutput');
-  outputContainer.innerHTML = '<div class="empty-state"><p>Processing configuration pipeline...</p></div>';
+  const statusEl = document.getElementById('queueStatus');
+  
+  globalMasterQueue = [];
+  currentAccountIndex = -1;
+  resetAccountDisplay();
 
   if (uploadedFileObject) {
-    // Process backend multi-format data route setup
+    statusEl.textContent = "Uploading file...";
     const formData = new FormData();
     formData.append('accountsFile', uploadedFileObject);
     try {
       const res = await fetch(BACKEND + '/upload-pipeline', { method: 'POST', body: formData });
       const data = await res.json();
       if(data.success && data.accounts.length > 0) {
-        renderIngestedAccounts(data.accounts);
+        // Tag every record dynamically to manage execution states safely
+        globalMasterQueue = data.accounts.map(a => ({ ...a, readClicked: false }));
+        statusEl.textContent = `Queue: ${globalMasterQueue.length} items parsed`;
+        document.getElementById('btnGenNext').disabled = false;
       } else {
-        outputContainer.innerHTML = `<div class="empty-state"><p style="color:var(--accent2)">Error: ${data.message || 'No rows parsed'}</p></div>`;
+        statusEl.textContent = "Error parsing file rows";
       }
     } catch(err) {
-      outputContainer.innerHTML = `<div class="empty-state"><p style="color:var(--accent2)">Connection Error.</p></div>`;
+      statusEl.textContent = "Upload failed.";
     }
   } else if (pasteData) {
-    // Process Local Raw Text string layout mapping structures
     const lines = pasteData.split('\n');
-    const records = [];
     lines.forEach(line => {
       const cleaned = line.trim();
       if(!cleaned) return;
       const parts = cleaned.split('|');
       if(parts.length >= 4) {
-        records.push({ email: parts[0], password: parts[1], refresh_token: parts[2], client_id: parts[3], raw: cleaned });
+        globalMasterQueue.push({ email: parts[0], password: parts[1], refresh_token: parts[2], client_id: parts[3], raw: cleaned, readClicked: false });
       }
     });
-    if(records.length > 0) renderIngestedAccounts(records);
-    else outputContainer.innerHTML = `<div class="empty-state"><p style="color:var(--accent4)">No structural pipelines match email|pass|token|id format</p></div>`;
+    if(globalMasterQueue.length > 0) {
+      statusEl.textContent = `Queue: ${globalMasterQueue.length} items parsed`;
+      document.getElementById('btnGenNext').disabled = false;
+    } else {
+      statusEl.textContent = "No valid records matched format";
+    }
   } else {
-    outputContainer.innerHTML = '<div class="empty-state"><p>Please complete an action field first.</p></div>';
+    statusEl.textContent = "No data source declared.";
   }
 }
 
-function renderIngestedAccounts(accounts) {
-  const container = document.getElementById('accountsArrayOutput');
-  container.innerHTML = '';
-  accounts.forEach((acc, index) => {
-    const card = document.createElement('div');
-    card.className = 'account-card';
-    card.innerHTML = `
-      <div class="card-row">
-        <div class="card-email" id="em-${index}">${esc(acc.email)}</div>
-        <button class="card-btn" onclick="cpToClipboard('${esc(acc.email)}')">📋 Copy Email</button>
-      </div>
-      <div class="card-row">
-        <div class="card-full-str">${esc(acc.raw)}</div>
-        <div class="card-actions">
-          <button class="card-btn" onclick="cpToClipboard('${esc(acc.raw)}')">📋 Copy All</button>
-          <button class="card-btn read" onclick="readHotmailCode('${esc(acc.refresh_token)}','${esc(acc.client_id)}','${esc(acc.email)}')">🔑 Read Code</button>
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
+// Selects an account randomly that has not been read yet
+function generateRandomHotmail() {
+  // Filter for items where readClicked is false
+  const availableIndices = [];
+  globalMasterQueue.forEach((acc, idx) => {
+    if (!acc.readClicked) availableIndices.push(idx);
   });
+
+  if (availableIndices.length === 0) {
+    document.getElementById('activeEmailView').textContent = "FINISHED";
+    document.getElementById('activeEmailView').classList.add('empty');
+    document.getElementById('activeStringView').textContent = "All records processed completely";
+    document.getElementById('activeStringView').classList.add('empty');
+    document.getElementById('btnGenNext').disabled = true;
+    document.getElementById('btnReadHotmail').disabled = true;
+    currentAccountIndex = -1;
+    return;
+  }
+
+  // Pick a random index from the unread records list
+  const randomChoice = Math.floor(Math.random() * availableIndices.length);
+  currentAccountIndex = availableIndices[randomChoice];
+  
+  const targetAcc = globalMasterQueue[currentAccountIndex];
+  
+  const emEl = document.getElementById('activeEmailView');
+  emEl.textContent = targetAcc.email;
+  emEl.classList.remove('empty');
+  
+  const strEl = document.getElementById('activeStringView');
+  strEl.textContent = targetAcc.raw;
+  strEl.classList.remove('empty');
+  
+  document.getElementById('btnReadHotmail').disabled = false;
+  document.getElementById('hotmailOtpOutput').textContent = "WAITING FOR READ";
 }
 
-async function readHotmailCode(refreshToken, clientId, email) {
-  const moduleView = document.getElementById('inboxViewModule');
-  const codeArea = document.getElementById('codeArea');
-  document.getElementById('activeEmailLabel').textContent = "Connecting: " + email;
-  moduleView.style.display = 'flex';
-  codeArea.innerHTML = `<div class="empty-state"><p>Querying Rest API endpoints for security credentials verification codes...</p></div>`;
+async function readActiveHotmailCode() {
+  if (currentAccountIndex === -1) return;
   
+  const targetAcc = globalMasterQueue[currentAccountIndex];
+  const otpOutput = document.getElementById('hotmailOtpOutput');
+  otpOutput.textContent = "READING...";
+
+  // Mark as read immediately so it cannot appear in future generations
+  globalMasterQueue[currentAccountIndex].readClicked = true;
+  
+  // Update counter visual text display safely
+  const leftUnread = globalMasterQueue.filter(a => !a.readClicked).length;
+  document.getElementById('queueStatus').textContent = `Queue: ${leftUnread} unread left`;
+
   try {
     const res = await fetch(BACKEND + '/read-hotmail-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken, client_id: clientId, email: email })
+      body: JSON.stringify({ refresh_token: targetAcc.refresh_token, client_id: targetAcc.client_id, email: targetAcc.email })
     });
     const data = await res.json();
     if(data.success && data.code) {
-      codeArea.innerHTML = `
-        <div class="big-code-wrap">
-          <div class="big-code" style="font-size:24px; padding:8px 12px;">${esc(data.code)}</div>
-          <button class="big-copy-btn" style="padding:6px;" onclick="cpBigCode('${esc(data.code)}')">⎘ Copy Isolated OTP Code</button>
-        </div>
-      `;
+      otpOutput.textContent = data.code;
+      // Auto-copy the isolated code snippet
+      navigator.clipboard.writeText(data.code);
+      showToast("✓ OTP Code extracted and copied!");
     } else {
-      codeArea.innerHTML = `<div class="empty-state"><p style="color:var(--accent2)">${data.message || 'No dynamic code matching triggers located inside messages.'}</p></div>`;
+      otpOutput.textContent = "NO CODE FOUND";
     }
   } catch(e) {
-    codeArea.innerHTML = `<div class="empty-state"><p style="color:var(--accent2)">Failed to run authentication parsing routine.</p></div>`;
+    otpOutput.textContent = "ERROR CONNECTING";
   }
 }
 
-function closeInboxModule() {
-  document.getElementById('inboxViewModule').style.display = 'none';
+/* ══ ZOHO IMAP EXECUTION CHANNEL ════════════════════════════════ */
+async function fetchZohoEmails() {
+  const email = document.getElementById('zohoEmail').value.trim();
+  const password = document.getElementById('zohoPassword').value.trim();
+  const errBox = document.getElementById('zohoErr');
+  const otpOutput = document.getElementById('zohoOtpOutput');
+  
+  errBox.style.display = 'none';
+  otpOutput.textContent = "CHECKING...";
+
+  if(!email || !password) {
+    errBox.textContent = "Enter email and password settings.";
+    errBox.style.display = 'block';
+    otpOutput.textContent = "—— ——";
+    return;
+  }
+
+  try {
+    const res = await fetch(BACKEND + '/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if(data.error) {
+      errBox.textContent = data.error;
+      errBox.style.display = 'block';
+      otpOutput.textContent = "ERROR";
+    } else if(data.emails && data.emails.length > 0) {
+      const body = data.emails[0].body || '';
+      const subject = data.emails[0].subject || '';
+      const combo = subject + " " + body;
+      
+      // Look for standard 4-8 digit numerical tokens
+      const match = combo.match(/\b\d{4,8}\b/);
+      if(match) {
+        otpOutput.textContent = match[0];
+        navigator.clipboard.writeText(match[0]);
+        showToast("✓ Zoho verification token copied!");
+      } else {
+        otpOutput.textContent = "NOT FOUND";
+      }
+    } else {
+      otpOutput.textContent = "EMPTY INBOX";
+    }
+  } catch(err) {
+    errBox.textContent = "Connection failed.";
+    errBox.style.display = 'block';
+    otpOutput.textContent = "ERROR";
+  }
 }
 
-/* ══ LEGACY COMPONENT HELPERS ════════════════════════════════════ */
-function cpToClipboard(val){
-  const t=document.createElement('textarea');t.value=val;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);
+/* ══ CORE UTILITIES & IDENTITY CREATION VECTOR CODES ═══════════ */
+function resetAccountDisplay() {
+  document.getElementById('activeEmailView').textContent = "No Account Selected";
+  document.getElementById('activeEmailView').classList.add('empty');
+  document.getElementById('activeStringView').textContent = "—";
+  document.getElementById('activeStringView').classList.add('empty');
+  document.getElementById('btnReadHotmail').disabled = true;
+  document.getElementById('hotmailOtpOutput').textContent = "READY";
 }
-function flash(id){
-  const el=document.getElementById(id); if(!el)return; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1500);
+
+function copyValue(id) {
+  const el = document.getElementById(id);
+  if (el && !el.classList.contains('empty')) {
+    const cleanText = el.textContent.replace(' ⎘', '').trim();
+    navigator.clipboard.writeText(cleanText);
+    showToast();
+  }
 }
+
+function copyDirectText(id) {
+  const txt = document.getElementById(id).textContent;
+  if(txt && txt !== '—') {
+    navigator.clipboard.writeText(txt);
+    showToast();
+  }
+}
+
+function showToast(msg = "✓ Copied to clipboard!") {
+  const toast = document.getElementById('toastNotification');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1500);
+}
+
+// Legacy Helpers 
 function getPasswordDay(){
   const now=new Date(); const watHour=new Date(now.getTime()+60*60*1000).getUTCHours(); let d=new Date(now.getTime()+60*60*1000);
-  if(watHour>=18){ d=new Date(d.getTime()+24*60*60*1000); } return String(d.getUTCDate());
+  if(watHour>=18) d=new Date(d.getTime()+24*60*60*1000); return String(d.getUTCDate());
 }
-function genPassword(){
+function triggerLegacyGenerators() {
+  // Password Gen Vector
   const day=String(getPasswordDay()); const dateHasOne=day.includes('1'); const dateHasZero=day.includes('0');
   const upper='ABCDEFGHJKMNOPQRSTUVWXYZ'; const lower='abcdefghijkmnopqrstuvwxyz'; const syms='#@$%&*'; let digits='23456789';
   if(dateHasOne) digits+='1'; const all=upper+lower+syms+digits; const totalLen=Math.floor(Math.random()*4)+8; const bodyLen=Math.max(4,totalLen-day.length);
   let body=[]; body.push(upper[Math.floor(Math.random()*upper.length)]); body.push(lower[Math.floor(Math.random()*lower.length)]); body.push(syms[Math.floor(Math.random()*syms.length)]);
   for(let i=body.length;i<bodyLen;i++) body.push(all[Math.floor(Math.random()*all.length)]);
   for(let i=body.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[body[i],body[j]]=[body[j],body[i]];}
-  const pw=body.join('')+day; document.getElementById('pwVal').textContent=pw; document.getElementById('pwVal').classList.remove('empty');
+  document.getElementById('pwVal').textContent = body.join('')+day;
+
+  // Identity Map
+  const pools = {
+    Nigeria:{first:['Chukwuemeka','Adaeze','Oluwaseun','Ngozi'],last:['Okonkwo','Adeyemi','Eze']},
+    USA:{first:['Tyler','Madison','Brandon','Kayla'],last:['Johnson','Williams','Brown']}
+  };
+  const c = ['Nigeria','USA'][Math.floor(Math.random()*2)];
+  const f = pools[c].first[Math.floor(Math.random()*pools[c].first.length)];
+  const l = pools[c].last[Math.floor(Math.random()*pools[c].last.length)];
+  document.getElementById('firstVal').textContent = f;
+  document.getElementById('lastVal').textContent = l;
+  
+  const username = (f.toLowerCase() + l.toLowerCase().slice(0,3) + String(Math.floor(Math.random()*90)+10)).slice(0,12);
+  document.getElementById('unVal').textContent = username;
+  document.getElementById('ageVal').textContent = Math.floor(Math.random()*20)+23;
+
+  // DOB
+  const y=Math.floor(Math.random()*11)+1993; const m=Math.floor(Math.random()*12)+1; const maxD=new Date(y,m,0).getDate(); const dVal=Math.floor(Math.random()*maxD)+1;
+  document.getElementById('dtVal').textContent = String(dVal).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
 }
-function cpPassword(){ const val=document.getElementById('pwVal').textContent; if(!val||val==='Click generate all')return; cpToClipboard(val);flash('pwFlash'); }
-const NAMES_BY_COUNTRY={
-  Nigeria:{first:['Chukwuemeka','Adaeze','Oluwaseun','Ngozi'],last:['Okonkwo','Adeyemi','Eze']},
-  USA:{first:['Tyler','Madison','Brandon','Kayla'],last:['Johnson','Williams','Brown']}
-};
-const COUNTRIES=Object.keys(NAMES_BY_COUNTRY);
-const GIBS=['gdf','jyt','xkz','qpn','bvt']; let currentFirst='',currentLast='';
-function genName(){
-  const country=COUNTRIES[Math.floor(Math.random()*COUNTRIES.length)]; const pool=NAMES_BY_COUNTRY[country];
-  currentFirst=pool.first[Math.floor(Math.random()*pool.first.length)]; currentLast=pool.last[Math.floor(Math.random()*pool.last.length)];
-  document.getElementById('firstVal').textContent=currentFirst; document.getElementById('firstVal').classList.remove('empty');
-  document.getElementById('lastVal').textContent=currentLast; document.getElementById('lastVal').classList.remove('empty');
-  genUsernameFromName(currentFirst,currentLast);
-}
-function cpUsername(){ const val=document.getElementById('unVal').textContent; if(!val||val==='Click generate')return; cpToClipboard(val);flash('unFlash'); }
-function cpFirst(){ if(!currentFirst)return; cpToClipboard(currentFirst);flash('firstFlash'); }
-function cpLast(){ if(!currentLast)return; cpToClipboard(currentLast);flash('lastFlash'); }
-function genUsernameFromName(first,last){
-  const f=first.toLowerCase(); const l=last.toLowerCase(); const gib=GIBS[Math.floor(Math.random()*GIBS.length)]; const num=String(Math.floor(Math.random()*90)+10);
-  let u=f+l.slice(0,3)+num; if(u.length>12)u=u.slice(0,12); document.getElementById('unVal').textContent=u; document.getElementById('unVal').classList.remove('empty');
-}
-function genUsernameAndCopy(){ genName(); cpUsername(); }
-function genAge(){ const n=Math.floor(Math.random()*20)+23; document.getElementById('ageVal').textContent=n; document.getElementById('ageVal').style.display='block'; document.getElementById('agePlaceholder').style.display='none'; }
-function cpAge(){ const val=document.getElementById('ageVal').textContent; if(!val||val==='Click generate all')return; cpToClipboard(val);flash('ageFlash'); }
-function genAll(){ genName(); genAge(); genPassword(); }
-let currentDate='';
-function genDateAndCopy(){
-  const year=Math.floor(Math.random()*11)+1993; const month=Math.floor(Math.random()*12)+1; const maxDay=new Date(year,month,0).getDate(); const day=Math.floor(Math.random()*maxDay)+1;
-  currentDate=String(day).padStart(2,'0')+'/'+String(month).padStart(2,'0')+'/'+year;
-  const el=document.getElementById('dtVal'); el.textContent=currentDate; el.classList.remove('empty'); cpToClipboard(currentDate); flash('dtFlash');
-}
-function cpDate(){ if(!currentDate)return; cpToClipboard(currentDate); flash('dtFlash'); }
-function cpBigCode(code){ cpToClipboard(code); alert('Code Copied!'); }
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 </script>
 </body>
 </html>
