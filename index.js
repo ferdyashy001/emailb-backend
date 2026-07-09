@@ -1,6 +1,9 @@
 const express = require('express');
 const Imap = require('imap');
 const { simpleParser } = require('mailparser');
+const multer = require('multer');
+const xlsx = require('xlsx');
+const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,12 +19,148 @@ app.use((req, res, next) => {
   next();
 });
 
+// Setup memory storage for incoming file processing pipeline
+const upload = multer({ storage: multer.memoryStorage() });
+
 // Health check
 app.get('/', (req, res) => {
   res.json({ status: 'Email B backend is running!' });
 });
 
-// Fetch emails via IMAP
+/* ══ NEW: MASS DATA CONFIGURATION IMPORT PIPELINE (.TXT, .CSV, .XLSX) ══ */
+app.post('/upload-pipeline', upload.single('accountsFile'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const filename = req.file.originalname.toLowerCase();
+    const accounts = [];
+
+    // Process Spreadsheets (both Excel .xlsx and comma/tab-separated .csv)
+    if (filename.endsWith('.xlsx') || filename.endsWith('.csv')) {
+      const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonRows = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+
+      for (const row of jsonRows) {
+        if (!row || row.length === 0) continue;
+
+        // Condition A: Data is all crammed into a single cell using pipe characters
+        if (row.length === 1 && typeof row[0] === 'string' && row[0].includes('|')) {
+          const line = row[0].trim();
+          const parts = line.split('|');
+          if (parts.length >= 4) {
+            accounts.push({ email: parts[0], password: parts[1], refresh_token: parts[2], client_id: parts[3], raw: line });
+          }
+        } else if (row.length >= 4) {
+          // Condition B: Data is beautifully separated across columns (Col A: Email, Col B: Pass, etc.)
+          const email = String(row[0]).trim();
+          const password = String(row[1]).trim();
+          const refresh_token = String(row[2]).trim();
+          const client_id = String(row[3]).trim();
+          if (email && password && refresh_token && client_id) {
+            accounts.push({
+              email,
+              password,
+              refresh_token,
+              client_id,
+              raw: `${email}|${password}|${refresh_token}|${client_id}`
+            });
+          }
+        }
+      }
+      return res.json({ success: true, accounts });
+    } else {
+      // Process standard line-break text files (.txt)
+      const textContent = req.file.buffer.toString('utf-8');
+      const lines = textContent.split(/\r?\n/);
+      
+      lines.forEach(line => {
+        const cleaned = line.trim();
+        if (!cleaned) return;
+        const parts = cleaned.split('|');
+        if (parts.length >= 4) {
+          accounts.push({ email: parts[0], password: parts[1], refresh_token: parts[2], client_id: parts[3], raw: cleaned });
+        }
+      });
+      return res.json({ success: true, accounts });
+    }
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/* ══ NEW: SECURE MICROSOFT REST API OAUTH & INBOX OTP READER ══ */
+app.post('/read-hotmail-code', async (req, res) => {
+  const { refresh_token, client_id } = req.body;
+  if (!refresh_token || !client_id) {
+    return res.status(400).json({ success: false, message: 'Missing credential keys' });
+  }
+
+  try {
+    // 1. Swap the refresh token for a live secure temporary session Access Token
+    const tokenUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+    const params = new URLSearchParams();
+    params.append('client_id', client_id);
+    params.append('scope', 'https://graph.microsoft.com/Mail.Read');
+    params.append('refresh_token', refresh_token);
+    params.append('grant_type', 'refresh_token');
+
+    const tokenRes = await axios.post(tokenUrl, params, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    const accessToken = tokenRes.data.access_token;
+
+    // 2. Request last 5 items out of user inbox container
+    const mailUrl = 'https://graph.microsoft.com/v1.0/me/messages?$top=5&$select=subject,body';
+    const mailRes = await axios.get(mailUrl, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+
+    const messages = mailRes.data.value || [];
+    let extractedCode = null;
+
+    // 3. Isolated internal verification parser logic mapping string formats
+    function findCode(text) {
+      if (!text) return null;
+      const subjectStartMatch = text.match(/^(\d{4,8})\s+(?:is your|ist dein|is the|es tu)/im);
+      if (subjectStartMatch) return subjectStartMatch[1];
+
+      const inlineMatch = text.match(/(?:code|pin|otp)[^\d]{0,20}(\d{4,8})(?:\s|$)/i);
+      if (inlineMatch) return inlineMatch[1];
+
+      const genericMatch = text.match(/\b\d{4,8}\b/);
+      if (genericMatch) return genericMatch[0];
+      return null;
+    }
+
+    for (const msg of messages) {
+      const subject = msg.subject || '';
+      const bodyText = msg.body?.content || '';
+      const cleanBody = bodyText.replace(/<[^>]*>/g, ' '); // Strip HTML rendering tags
+      
+      const parsedOutput = findCode(subject + '\n' + cleanBody);
+      if (parsedOutput) {
+        extractedCode = parsedOutput;
+        break;
+      }
+    }
+
+    if (extractedCode) {
+      return res.json({ success: true, code: extractedCode });
+    } else {
+      return res.json({ success: false, message: 'No dynamic code matching triggers located inside messages.' });
+    }
+  } catch (error) {
+    const errMsg = error.response?.data?.error_description || error.message;
+    return res.status(500).json({ success: false, message: 'Authentication routine error: ' + errMsg });
+  }
+});
+
+/* ══ UNTOUCHED LEGACY INBOX IMAP COEXISTENCE LAYER ════════════ */
 app.post('/emails', (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.set('Pragma', 'no-cache');
@@ -72,14 +211,12 @@ app.post('/emails', (req, res) => {
   }
 
   imap.once('ready', () => {
-    // First get all folder names so we can find the right one
     imap.getBoxes((err, boxes) => {
       if (err) {
         imap.end();
         return safeRespond({ error: 'Could not list folders: ' + err.message });
       }
 
-      // Flatten all folders
       const allFolders = [];
       function flatten(obj, prefix) {
         for (const name in obj) {
@@ -91,18 +228,15 @@ app.post('/emails', (req, res) => {
       }
       flatten(boxes, '');
 
-      // Find Notification folder (works in any language)
-      // Priority: Notification > INBOX
       let targetFolder = 'INBOX';
       const notifMatch = allFolders.find(f =>
         f.toLowerCase().includes('notification') ||
-        f.toLowerCase().includes('powiadomien') // Polish
+        f.toLowerCase().includes('powiadomien')
       );
       if (notifMatch) targetFolder = notifMatch;
 
       imap.openBox(targetFolder, false, (err, box) => {
         if (err) {
-          // Try INBOX as fallback
           imap.openBox('INBOX', false, (err2, box2) => {
             if (err2 || !box2) {
               imap.end();
@@ -122,7 +256,6 @@ app.post('/emails', (req, res) => {
         }
 
         const total = box.messages.total;
-        // Fetch last 2 emails only
         const start = Math.max(1, total - 1);
         const fetcher = imap.seq.fetch(`${start}:${total}`, {
           bodies: ['HEADER.FIELDS (FROM SUBJECT DATE)', 'TEXT'],
