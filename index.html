@@ -61,11 +61,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* Legacy Generator Outputs Grid */
 .info-subgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.info-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
-.info-box:hover{border-color:var(--accent)}
-.info-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;text-align:center}
+.info-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px;justify-content:space-between;}
+.info-box-clickable{cursor:pointer}
+.info-box-clickable:hover{border-color:var(--accent)}
+.info-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;text-align:center;word-break:break-all;padding:2px 0}
 .info-val.empty{color:var(--muted);font-size:11px}
 .info-btn{width:100%;padding:8px;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;background:var(--surface2);color:var(--text);border:1px solid var(--border);margin-top:6px}
+.item-gen-btn{width:100%;padding:4px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Syne',sans-serif;font-size:9px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.item-gen-btn:hover{border-color:var(--accent2);color:var(--text)}
 
 /* ZohoMail / IMAP Section Form Elements */
 .input-group{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
@@ -109,7 +112,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
         <div class="pipeline-actions">
           <button class="btn-ingest" onclick="loadDataToQueue()">Load Source Data</button>
-          <button class="btn-generate-single" id="btnGenNext" onclick="generateRandomHotmail()" disabled>⚡ Pick Random Live Account</button>
+          <button class="btn-generate-single" id="btnGenNext" onclick="generateRandomHotmail()">⚡ Pick Random Live Account</button>
         </div>
         
         <div class="copied-toast" id="toastNotification">✓ Copied to clipboard!</div>
@@ -160,12 +163,55 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <div class="panel" style="flex:1;">
         <div class="panel-label n">⚙️ Legacy Identity Field Vectors</div>
         <div class="info-subgrid" style="flex:1;">
-          <div class="info-box" onclick="copyDirectText('unVal')"><div class="display-label">Username</div><div class="info-val empty" id="unVal">—</div></div>
-          <div class="info-box" onclick="copyDirectText('ageVal')"><div class="display-label">Age</div><div class="info-val empty" id="ageVal">—</div></div>
-          <div class="info-box" onclick="copyDirectText('firstVal')"><div class="display-label">First Name</div><div class="info-val empty" id="firstVal">—</div></div>
-          <div class="info-box" onclick="copyDirectText('lastVal')"><div class="display-label">Last Name</div><div class="info-val empty" id="lastVal">—</div></div>
-          <div class="info-box" onclick="copyDirectText('pwVal')"><div class="display-label">Password</div><div class="info-val empty" id="pwVal">—</div></div>
-          <div class="info-box" onclick="copyDirectText('dtVal')"><div class="display-label">Date of Birth</div><div class="info-val empty" id="dtVal">—</div></div>
+          
+          <div class="info-box">
+            <div class="info-box-clickable" onclick="copyDirectText('unVal')">
+              <div class="display-label">Username</div>
+              <div class="info-val empty" id="unVal">—</div>
+            </div>
+            <button class="item-gen-btn" onclick="genAndCopyIndividual('username')">⟳ Gen & Copy</button>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-clickable" onclick="copyDirectText('ageVal')">
+              <div class="display-label">Age</div>
+              <div class="info-val empty" id="ageVal">—</div>
+            </div>
+            <button class="item-gen-btn" onclick="genAndCopyIndividual('age')">⟳ Gen & Copy</button>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-clickable" onclick="copyDirectText('firstVal')">
+              <div class="display-label">First Name</div>
+              <div class="info-val empty" id="firstVal">—</div>
+            </div>
+            <button class="item-gen-btn" onclick="genAndCopyIndividual('firstname')">⟳ Gen & Copy</button>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-clickable" onclick="copyDirectText('lastVal')">
+              <div class="display-label">Last Name</div>
+              <div class="info-val empty" id="lastVal">—</div>
+            </div>
+            <button class="item-gen-btn" onclick="genAndCopyIndividual('lastname')">⟳ Gen & Copy</button>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-clickable" onclick="copyDirectText('pwVal')">
+              <div class="display-label">Password</div>
+              <div class="info-val empty" id="pwVal">—</div>
+            </div>
+            <button class="item-gen-btn" onclick="genAndCopyIndividual('password')">⟳ Gen & Copy</button>
+          </div>
+
+          <div class="info-box">
+            <div class="info-box-clickable" onclick="copyDirectText('dtVal')">
+              <div class="display-label">Date of Birth</div>
+              <div class="info-val empty" id="dtVal">—</div>
+            </div>
+            <button class="item-gen-btn" onclick="genAndCopyIndividual('dob')">⟳ Gen & Copy</button>
+          </div>
+
         </div>
         <button class="info-btn" onclick="triggerLegacyGenerators()">⟳ Fast Track Info Generator Set</button>
       </div>
@@ -179,6 +225,37 @@ const BACKEND = 'https://emailb-backend.onrender.com';
 let globalMasterQueue = [];
 let currentAccountIndex = -1;
 let uploadedFileObject = null;
+let lastSelectedFirstName = ""; // Prevents consecutive name repeats
+
+/* ════ GLOBAL MASSIVE NAMES ENGINE DATA POOL ════ */
+const GLOBAL_FIRST_NAMES = [
+  // North America & Europe
+  'Liam','Noah','Oliver','Elijah','James','William','Benjamin','Lucas','Henry','Alexander',
+  'Mason','Michael','Ethan','Daniel','Jacob','Logan','Jackson','Levi','Sebastian','Jack',
+  'Owen','Luke','Wyatt','Oliver','Emma','Olivia','Ava','Isabella','Sophia','Charlotte',
+  'Mia','Amelia','Harper','Evelyn','Abigail','Emily','Ella','Elizabeth','Camila','Luna',
+  'Thomas','Arthur','Louis','Lucas','Hugo','Jules','Leo','Gabriel','Timothee','Nathan',
+  'Lukas','Maximilian','Felix','Paul','Jakob','Ben','Jonas','Leon','Finn','Elias',
+  // Africa
+  'Chukwuemeka','Adaeze','Oluwaseun','Ngozi','Okon','Tunde','Kwame','Kofi','Amadi','Chioma',
+  'Fatoumata','Moussa','Sekou','Amara','Abubakar','Zubairu','Tendai','Yusuf','Mensah',
+  // Asia & Latin America
+  'Hiroto','Ren','Yuma','Sota','Minato','Haruto','Itsuki','Yuto','Sakura','Mei','Yua',
+  'Aoi','Hina','Koharu','Santiago','Mateo','Matias','Sebastian','Diego','Alejandro',
+  'Nicolas','Samuel','Tomas','Valentina','Sofia','Isabella','Camila','Luciana','Ximena'
+];
+
+const GLOBAL_LAST_NAMES = [
+  'Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez',
+  'Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin',
+  'Lee','Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson',
+  'Okonkwo','Adeyemi','Eze','Balogun','Obi','Nwachukwu','Babangida','Danjuma','Sani',
+  'Silva','Santos','Ferreira','Pereira','Oliveira','Costa','Rodriguez','Gomez','Fernandez',
+  'Sato','Suzuki','Takahashi','Tanaka','Watanabe','Ito','Yamamoto','Nakamura','Kobayashi',
+  'Müller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz'
+];
+
+const GIBS = ['gdf','jyt','xkz','qpn','bvt','wre','mpl','vks'];
 
 function handleFileUpload(event) {
   const file = event.target.files[0];
@@ -188,7 +265,6 @@ function handleFileUpload(event) {
   }
 }
 
-// Read fields and populate the working local master queue array
 async function loadDataToQueue() {
   const pasteData = document.getElementById('directPasteField').value.trim();
   const statusEl = document.getElementById('queueStatus');
@@ -205,7 +281,6 @@ async function loadDataToQueue() {
       const res = await fetch(BACKEND + '/upload-pipeline', { method: 'POST', body: formData });
       const data = await res.json();
       if(data.success && data.accounts.length > 0) {
-        // Tag every record dynamically to manage execution states safely
         globalMasterQueue = data.accounts.map(a => ({ ...a, readClicked: false }));
         statusEl.textContent = `Queue: ${globalMasterQueue.length} items parsed`;
         document.getElementById('btnGenNext').disabled = false;
@@ -236,9 +311,7 @@ async function loadDataToQueue() {
   }
 }
 
-// Selects an account randomly that has not been read yet
 function generateRandomHotmail() {
-  // Filter for items where readClicked is false
   const availableIndices = [];
   globalMasterQueue.forEach((acc, idx) => {
     if (!acc.readClicked) availableIndices.push(idx);
@@ -255,7 +328,6 @@ function generateRandomHotmail() {
     return;
   }
 
-  // Pick a random index from the unread records list
   const randomChoice = Math.floor(Math.random() * availableIndices.length);
   currentAccountIndex = availableIndices[randomChoice];
   
@@ -280,10 +352,8 @@ async function readActiveHotmailCode() {
   const otpOutput = document.getElementById('hotmailOtpOutput');
   otpOutput.textContent = "READING...";
 
-  // Mark as read immediately so it cannot appear in future generations
   globalMasterQueue[currentAccountIndex].readClicked = true;
   
-  // Update counter visual text display safely
   const leftUnread = globalMasterQueue.filter(a => !a.readClicked).length;
   document.getElementById('queueStatus').textContent = `Queue: ${leftUnread} unread left`;
 
@@ -296,7 +366,6 @@ async function readActiveHotmailCode() {
     const data = await res.json();
     if(data.success && data.code) {
       otpOutput.textContent = data.code;
-      // Auto-copy the isolated code snippet
       navigator.clipboard.writeText(data.code);
       showToast("✓ OTP Code extracted and copied!");
     } else {
@@ -336,11 +405,7 @@ async function fetchZohoEmails() {
       errBox.style.display = 'block';
       otpOutput.textContent = "ERROR";
     } else if(data.emails && data.emails.length > 0) {
-      const body = data.emails[0].body || '';
-      const subject = data.emails[0].subject || '';
-      const combo = subject + " " + body;
-      
-      // Look for standard 4-8 digit numerical tokens
+      const combo = (data.emails[0].subject || '') + " " + (data.emails[0].body || '');
       const match = combo.match(/\b\d{4,8}\b/);
       if(match) {
         otpOutput.textContent = match[0];
@@ -359,7 +424,105 @@ async function fetchZohoEmails() {
   }
 }
 
-/* ══ CORE UTILITIES & IDENTITY CREATION VECTOR CODES ═══════════ */
+/* ══ GRANULAR INDIVIDUAL RE-GENERATOR PIPELINE ENGINE ══ */
+function getUniqueRandomFirstName() {
+  let chosen = "";
+  // Keep picking until it doesn't match the last consecutive choice
+  do {
+    chosen = GLOBAL_FIRST_NAMES[Math.floor(Math.random() * GLOBAL_FIRST_NAMES.length)];
+  } while (chosen === lastSelectedFirstName);
+  lastSelectedFirstName = chosen;
+  return chosen;
+}
+
+function genAndCopyIndividual(fieldKey) {
+  let generatedValue = "";
+  
+  if (fieldKey === 'firstname') {
+    generatedValue = getUniqueRandomFirstName();
+    const el = document.getElementById('firstVal');
+    el.textContent = generatedValue; el.classList.remove('empty');
+  } 
+  else if (fieldKey === 'lastname') {
+    generatedValue = GLOBAL_LAST_NAMES[Math.floor(Math.random() * GLOBAL_LAST_NAMES.length)];
+    const el = document.getElementById('lastVal');
+    el.textContent = generatedValue; el.classList.remove('empty');
+  } 
+  else if (fieldKey === 'username') {
+    // Uses structural names current state or fallbacks on a fresh random generation
+    let currentF = document.getElementById('firstVal').textContent;
+    if (!currentF || currentF === '—') currentF = getUniqueRandomFirstName();
+    let currentL = document.getElementById('lastVal').textContent;
+    if (!currentL || currentL === '—') currentL = GLOBAL_LAST_NAMES[Math.floor(Math.random() * GLOBAL_LAST_NAMES.length)];
+    
+    const gib = GIBS[Math.floor(Math.random() * GIBS.length)];
+    const num = String(Math.floor(Math.random() * 90) + 10);
+    generatedValue = (currentF.toLowerCase() + currentL.toLowerCase().slice(0,3) + num).slice(0,12);
+    
+    const el = document.getElementById('unVal');
+    el.textContent = generatedValue; el.classList.remove('empty');
+  } 
+  else if (fieldKey === 'age') {
+    generatedValue = String(Math.floor(Math.random() * 20) + 23);
+    const el = document.getElementById('ageVal');
+    el.textContent = generatedValue; el.classList.remove('empty');
+  } 
+  else if (fieldKey === 'password') {
+    generatedValue = runPasswordAlgo();
+    const el = document.getElementById('pwVal');
+    el.textContent = generatedValue; el.classList.remove('empty');
+  } 
+  else if (fieldKey === 'dob') {
+    generatedValue = runDobAlgo();
+    const el = document.getElementById('dtVal');
+    el.textContent = generatedValue; el.classList.remove('empty');
+  }
+
+  if (generatedValue) {
+    navigator.clipboard.writeText(generatedValue);
+    showToast(`✓ Generated & Copied: ${generatedValue}`);
+  }
+}
+
+/* ══ UTILITIES & SYSTEM ALGORITHMS ══ */
+function getPasswordDay(){
+  const now=new Date(); const watHour=new Date(now.getTime()+60*60*1000).getUTCHours(); let d=new Date(now.getTime()+60*60*1000);
+  if(watHour>=18) d=new Date(d.getTime()+24*60*60*1000); return String(d.getUTCDate());
+}
+
+function runPasswordAlgo() {
+  const day=String(getPasswordDay()); const dateHasOne=day.includes('1'); const dateHasZero=day.includes('0');
+  const upper='ABCDEFGHJKMNOPQRSTUVWXYZ'; const lower='abcdefghijkmnopqrstuvwxyz'; const syms='#@$%&*'; let digits='23456789';
+  if(dateHasOne) digits+='1'; const all=upper+lower+syms+digits; const totalLen=Math.floor(Math.random()*4)+8; const bodyLen=Math.max(4,totalLen-day.length);
+  let body=[]; body.push(upper[Math.floor(Math.random()*upper.length)]); body.push(lower[Math.floor(Math.random()*lower.length)]); body.push(syms[Math.floor(Math.random()*syms.length)]);
+  for(let i=body.length;i<bodyLen;i++) body.push(all[Math.floor(Math.random()*all.length)]);
+  for(let i=body.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[body[i],body[j]]=[body[j],body[i]];}
+  return body.join('')+day;
+}
+
+function runDobAlgo() {
+  const y=Math.floor(Math.random()*11)+1993; const m=Math.floor(Math.random()*12)+1; const maxD=new Date(y,m,0).getDate(); const dVal=Math.floor(Math.random()*maxD)+1;
+  return String(dVal).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
+}
+
+function triggerLegacyGenerators() {
+  // Generate all items at once synchronously using our optimized fields
+  const f = getUniqueRandomFirstName();
+  const l = GLOBAL_LAST_NAMES[Math.floor(Math.random() * GLOBAL_LAST_NAMES.length)];
+  const pw = runPasswordAlgo();
+  const dob = runDobAlgo();
+  const age = String(Math.floor(Math.random() * 20) + 23);
+  const num = String(Math.floor(Math.random() * 90) + 10);
+  const username = (f.toLowerCase() + l.toLowerCase().slice(0,3) + num).slice(0,12);
+
+  document.getElementById('firstVal').textContent = f; document.getElementById('firstVal').classList.remove('empty');
+  document.getElementById('lastVal').textContent = l; document.getElementById('lastVal').classList.remove('empty');
+  document.getElementById('pwVal').textContent = pw; document.getElementById('pwVal').classList.remove('empty');
+  document.getElementById('dtVal').textContent = dob; document.getElementById('dtVal').classList.remove('empty');
+  document.getElementById('ageVal').textContent = age; document.getElementById('ageVal').classList.remove('empty');
+  document.getElementById('unVal').textContent = username; document.getElementById('unVal').classList.remove('empty');
+}
+
 function resetAccountDisplay() {
   document.getElementById('activeEmailView').textContent = "No Account Selected";
   document.getElementById('activeEmailView').classList.add('empty');
@@ -391,41 +554,6 @@ function showToast(msg = "✓ Copied to clipboard!") {
   toast.textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1500);
-}
-
-// Legacy Helpers 
-function getPasswordDay(){
-  const now=new Date(); const watHour=new Date(now.getTime()+60*60*1000).getUTCHours(); let d=new Date(now.getTime()+60*60*1000);
-  if(watHour>=18) d=new Date(d.getTime()+24*60*60*1000); return String(d.getUTCDate());
-}
-function triggerLegacyGenerators() {
-  // Password Gen Vector
-  const day=String(getPasswordDay()); const dateHasOne=day.includes('1'); const dateHasZero=day.includes('0');
-  const upper='ABCDEFGHJKMNOPQRSTUVWXYZ'; const lower='abcdefghijkmnopqrstuvwxyz'; const syms='#@$%&*'; let digits='23456789';
-  if(dateHasOne) digits+='1'; const all=upper+lower+syms+digits; const totalLen=Math.floor(Math.random()*4)+8; const bodyLen=Math.max(4,totalLen-day.length);
-  let body=[]; body.push(upper[Math.floor(Math.random()*upper.length)]); body.push(lower[Math.floor(Math.random()*lower.length)]); body.push(syms[Math.floor(Math.random()*syms.length)]);
-  for(let i=body.length;i<bodyLen;i++) body.push(all[Math.floor(Math.random()*all.length)]);
-  for(let i=body.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[body[i],body[j]]=[body[j],body[i]];}
-  document.getElementById('pwVal').textContent = body.join('')+day;
-
-  // Identity Map
-  const pools = {
-    Nigeria:{first:['Chukwuemeka','Adaeze','Oluwaseun','Ngozi'],last:['Okonkwo','Adeyemi','Eze']},
-    USA:{first:['Tyler','Madison','Brandon','Kayla'],last:['Johnson','Williams','Brown']}
-  };
-  const c = ['Nigeria','USA'][Math.floor(Math.random()*2)];
-  const f = pools[c].first[Math.floor(Math.random()*pools[c].first.length)];
-  const l = pools[c].last[Math.floor(Math.random()*pools[c].last.length)];
-  document.getElementById('firstVal').textContent = f;
-  document.getElementById('lastVal').textContent = l;
-  
-  const username = (f.toLowerCase() + l.toLowerCase().slice(0,3) + String(Math.floor(Math.random()*90)+10)).slice(0,12);
-  document.getElementById('unVal').textContent = username;
-  document.getElementById('ageVal').textContent = Math.floor(Math.random()*20)+23;
-
-  // DOB
-  const y=Math.floor(Math.random()*11)+1993; const m=Math.floor(Math.random()*12)+1; const maxD=new Date(y,m,0).getDate(); const dVal=Math.floor(Math.random()*maxD)+1;
-  document.getElementById('dtVal').textContent = String(dVal).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
 }
 </script>
 </body>
