@@ -71,6 +71,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .item-gen-btn:hover{border-color:var(--accent2);color:var(--text)}
 
 /* ZohoMail / IMAP Section Form Elements */
+.input-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .input-group{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
 .input-group label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
 .input-group input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;width:100%}
@@ -141,7 +142,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="right-col">
       <div class="panel">
         <div class="panel-label u">🛡️ Traditional ZohoMail / Domain IMAP Monitor</div>
-        <div class="input-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="input-grid">
           <div class="input-group">
             <label>Email Address</label>
             <input type="text" id="zohoEmail" placeholder="example@zoho.com"/>
@@ -225,21 +226,18 @@ const BACKEND = 'https://emailb-backend.onrender.com';
 let globalMasterQueue = [];
 let currentAccountIndex = -1;
 let uploadedFileObject = null;
-let lastSelectedFirstName = ""; // Prevents consecutive name repeats
+let lastSelectedFirstName = "";
 
 /* ════ GLOBAL MASSIVE NAMES ENGINE DATA POOL ════ */
 const GLOBAL_FIRST_NAMES = [
-  // North America & Europe
   'Liam','Noah','Oliver','Elijah','James','William','Benjamin','Lucas','Henry','Alexander',
   'Mason','Michael','Ethan','Daniel','Jacob','Logan','Jackson','Levi','Sebastian','Jack',
-  'Owen','Luke','Wyatt','Oliver','Emma','Olivia','Ava','Isabella','Sophia','Charlotte',
+  'Owen','Luke','Wyatt','Emma','Olivia','Ava','Isabella','Sophia','Charlotte',
   'Mia','Amelia','Harper','Evelyn','Abigail','Emily','Ella','Elizabeth','Camila','Luna',
   'Thomas','Arthur','Louis','Lucas','Hugo','Jules','Leo','Gabriel','Timothee','Nathan',
   'Lukas','Maximilian','Felix','Paul','Jakob','Ben','Jonas','Leon','Finn','Elias',
-  // Africa
   'Chukwuemeka','Adaeze','Oluwaseun','Ngozi','Okon','Tunde','Kwame','Kofi','Amadi','Chioma',
   'Fatoumata','Moussa','Sekou','Amara','Abubakar','Zubairu','Tendai','Yusuf','Mensah',
-  // Asia & Latin America
   'Hiroto','Ren','Yuma','Sota','Minato','Haruto','Itsuki','Yuto','Sakura','Mei','Yua',
   'Aoi','Hina','Koharu','Santiago','Mateo','Matias','Sebastian','Diego','Alejandro',
   'Nicolas','Samuel','Tomas','Valentina','Sofia','Isabella','Camila','Luciana','Ximena'
@@ -255,7 +253,25 @@ const GLOBAL_LAST_NAMES = [
   'Müller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz'
 ];
 
-const GIBS = ['gdf','jyt','xkz','qpn','bvt','wre','mpl','vks'];
+// Fallback clipboard logic to ensure copying works inside iframe layout environments
+function robustClipboardCopy(text) {
+  if (!text || text === '—') return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+  }
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  textArea.style.left = "-9999px";
+  textArea.style.top = "-9999px";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    document.execCommand('copy');
+  } catch (err) {}
+  document.body.removeChild(textArea);
+}
 
 function handleFileUpload(event) {
   const file = event.target.files[0];
@@ -366,7 +382,7 @@ async function readActiveHotmailCode() {
     const data = await res.json();
     if(data.success && data.code) {
       otpOutput.textContent = data.code;
-      navigator.clipboard.writeText(data.code);
+      robustClipboardCopy(data.code);
       showToast("✓ OTP Code extracted and copied!");
     } else {
       otpOutput.textContent = "NO CODE FOUND";
@@ -376,7 +392,6 @@ async function readActiveHotmailCode() {
   }
 }
 
-/* ══ ZOHO IMAP EXECUTION CHANNEL ════════════════════════════════ */
 async function fetchZohoEmails() {
   const email = document.getElementById('zohoEmail').value.trim();
   const password = document.getElementById('zohoPassword').value.trim();
@@ -409,7 +424,7 @@ async function fetchZohoEmails() {
       const match = combo.match(/\b\d{4,8}\b/);
       if(match) {
         otpOutput.textContent = match[0];
-        navigator.clipboard.writeText(match[0]);
+        robustClipboardCopy(match[0]);
         showToast("✓ Zoho verification token copied!");
       } else {
         otpOutput.textContent = "NOT FOUND";
@@ -424,10 +439,8 @@ async function fetchZohoEmails() {
   }
 }
 
-/* ══ GRANULAR INDIVIDUAL RE-GENERATOR PIPELINE ENGINE ══ */
 function getUniqueRandomFirstName() {
   let chosen = "";
-  // Keep picking until it doesn't match the last consecutive choice
   do {
     chosen = GLOBAL_FIRST_NAMES[Math.floor(Math.random() * GLOBAL_FIRST_NAMES.length)];
   } while (chosen === lastSelectedFirstName);
@@ -449,15 +462,11 @@ function genAndCopyIndividual(fieldKey) {
     el.textContent = generatedValue; el.classList.remove('empty');
   } 
   else if (fieldKey === 'username') {
-    // Uses structural names current state or fallbacks on a fresh random generation
-    let currentF = document.getElementById('firstVal').textContent;
-    if (!currentF || currentF === '—') currentF = getUniqueRandomFirstName();
-    let currentL = document.getElementById('lastVal').textContent;
-    if (!currentL || currentL === '—') currentL = GLOBAL_LAST_NAMES[Math.floor(Math.random() * GLOBAL_LAST_NAMES.length)];
-    
-    const gib = GIBS[Math.floor(Math.random() * GIBS.length)];
+    // Isolated button click: completely independent and randomized username generation
+    const f = GLOBAL_FIRST_NAMES[Math.floor(Math.random() * GLOBAL_FIRST_NAMES.length)];
+    const l = GLOBAL_LAST_NAMES[Math.floor(Math.random() * GLOBAL_LAST_NAMES.length)];
     const num = String(Math.floor(Math.random() * 90) + 10);
-    generatedValue = (currentF.toLowerCase() + currentL.toLowerCase().slice(0,3) + num).slice(0,12);
+    generatedValue = (f.toLowerCase() + l.toLowerCase().slice(0,3) + num).slice(0,12);
     
     const el = document.getElementById('unVal');
     el.textContent = generatedValue; el.classList.remove('empty');
@@ -479,17 +488,17 @@ function genAndCopyIndividual(fieldKey) {
   }
 
   if (generatedValue) {
-    navigator.clipboard.writeText(generatedValue);
+    robustClipboardCopy(generatedValue);
     showToast(`✓ Generated & Copied: ${generatedValue}`);
   }
 }
 
-/* ══ UTILITIES & SYSTEM ALGORITHMS ══ */
 function getPasswordDay(){
   const now=new Date(); const watHour=new Date(now.getTime()+60*60*1000).getUTCHours(); let d=new Date(now.getTime()+60*60*1000);
   if(watHour>=18) d=new Date(d.getTime()+24*60*60*1000); return String(d.getUTCDate());
 }
 
+// Password algorithmic generation configuration
 function runPasswordAlgo() {
   const day=String(getPasswordDay()); const dateHasOne=day.includes('1'); const dateHasZero=day.includes('0');
   const upper='ABCDEFGHJKMNOPQRSTUVWXYZ'; const lower='abcdefghijkmnopqrstuvwxyz'; const syms='#@$%&*'; let digits='23456789';
@@ -506,7 +515,7 @@ function runDobAlgo() {
 }
 
 function triggerLegacyGenerators() {
-  // Generate all items at once synchronously using our optimized fields
+  // Combined button configuration: constructs username matching first and last name elements
   const f = getUniqueRandomFirstName();
   const l = GLOBAL_LAST_NAMES[Math.floor(Math.random() * GLOBAL_LAST_NAMES.length)];
   const pw = runPasswordAlgo();
@@ -521,6 +530,9 @@ function triggerLegacyGenerators() {
   document.getElementById('dtVal').textContent = dob; document.getElementById('dtVal').classList.remove('empty');
   document.getElementById('ageVal').textContent = age; document.getElementById('ageVal').classList.remove('empty');
   document.getElementById('unVal').textContent = username; document.getElementById('unVal').classList.remove('empty');
+
+  // Broadcast out to parent Electron frame layout window to update GMX/mail.com states automatically
+  window.parent.postMessage({ type: 'SYNC_NAMES', firstName: f, lastName: l }, '*');
 }
 
 function resetAccountDisplay() {
@@ -536,7 +548,7 @@ function copyValue(id) {
   const el = document.getElementById(id);
   if (el && !el.classList.contains('empty')) {
     const cleanText = el.textContent.replace(' ⎘', '').trim();
-    navigator.clipboard.writeText(cleanText);
+    robustClipboardCopy(cleanText);
     showToast();
   }
 }
@@ -544,7 +556,7 @@ function copyValue(id) {
 function copyDirectText(id) {
   const txt = document.getElementById(id).textContent;
   if(txt && txt !== '—') {
-    navigator.clipboard.writeText(txt);
+    robustClipboardCopy(txt);
     showToast();
   }
 }
